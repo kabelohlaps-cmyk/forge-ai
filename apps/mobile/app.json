@@ -1,0 +1,1 @@
+{"expo":{"name":"FORGE AI","slug":"forge-ai","scheme":"forge","android":{"intentFilters":[{"action":"VIEW","data":[{"scheme":"${applicationId}.braintree"}],"category":["BROWSABLE","DEFAULT"]}]},"ios":{"infoPlist":{"LSApplicationQueriesSchemes":["paypal"]}}}}

@@ -1,0 +1,48 @@
+version: '3.9'
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment: {POSTGRES_USER: forge, POSTGRES_PASSWORD: forge, POSTGRES_DB: forge}
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data, ./services/api/app/schema.sql:/docker-entrypoint-initdb.d/schema.sql]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  api:
+    build: ./services/api
+    environment:
+      DATABASE_URL: postgresql://forge:forge@postgres:5432/forge
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      PAYPAL_WEBHOOK_ID: ${PAYPAL_WEBHOOK_ID}
+      PAYPAL_API_BASE: https://api-m.sandbox.paypal.com
+      PAYPAL_PLAN_CREATOR: ${PAYPAL_PLAN_CREATOR}
+      PAYPAL_PLAN_ARCHITECT: ${PAYPAL_PLAN_ARCHITECT}
+      PAYPAL_PLAN_STUDIO: ${PAYPAL_PLAN_STUDIO}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+    ports: ["8000:8000"]
+    depends_on: [postgres, redis]
+  web:
+    build: ./apps/web
+    environment:
+      NEXT_PUBLIC_PAYPAL_CLIENT_ID: "${PAYPAL_CLIENT_ID}"
+      NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL:-http://localhost:8000}"
+      API_URL: "http://api:8000"
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID}
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID}
+      APPLE_KEY_ID: ${APPLE_KEY_ID}
+      APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY}
+    ports: ["3000:3000"]
+    depends_on: [api]
+volumes: {pgdata: {}}

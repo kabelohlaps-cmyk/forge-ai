@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base{
+  html{@apply bg-eden-deep text-eden-cream font-sans antialiased}
+  body{background-image:radial-gradient(ellipse at top,rgba(240,212,138,0.14),transparent 65%),radial-gradient(ellipse at bottom,rgba(62,123,71,0.18),transparent 70%);background-attachment:fixed;min-height:100vh}
+  ::selection{@apply bg-eden-gold/40 text-eden-deep}
+}
+@layer components{
+  .eden-panel{@apply rounded-2xl border border-eden-sage/20 bg-eden-moss/60 backdrop-blur-sm;box-shadow:0 1px 0 rgba(240,212,138,0.08) inset,0 20px 40px -20px rgba(0,0,0,0.6)}
+  .eden-btn{@apply rounded-full border border-eden-gold/50 px-5 py-2 font-serif tracking-wide text-eden-gold-light hover:bg-eden-gold/10 hover:border-eden-gold transition-all duration-300}
+  .eden-btn-primary{@apply rounded-full bg-gradient-to-b from-eden-gold-light to-eden-gold px-6 py-2.5 font-serif font-semibold tracking-wide text-eden-deep shadow-lg hover:brightness-110 transition-all duration-300}
+  .eden-divider{@apply h-px bg-gradient-to-r from-transparent via-eden-gold/40 to-transparent}
+  .eden-verse{@apply font-serif italic text-eden-gold-light}
+}

@@ -1,0 +1,14 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE TABLE users(id SERIAL PRIMARY KEY,email TEXT UNIQUE NOT NULL,name TEXT,password_hash TEXT,google_id TEXT UNIQUE,apple_id TEXT UNIQUE,tier TEXT DEFAULT 'free',render_quota INTEGER DEFAULT 10,allowed_modes TEXT[] DEFAULT ARRAY['vehicle','interior'],created_at TIMESTAMPTZ DEFAULT now(),updated_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE subscriptions(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),paypal_sub_id TEXT UNIQUE NOT NULL,tier TEXT NOT NULL,status TEXT DEFAULT 'PENDING',created_at TIMESTAMPTZ DEFAULT now(),activated_at TIMESTAMPTZ,cancelled_at TIMESTAMPTZ,suspended_at TIMESTAMPTZ,expired_at TIMESTAMPTZ,last_payment_at TIMESTAMPTZ,next_billing_at TIMESTAMPTZ);
+CREATE TABLE projects(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),title TEXT NOT NULL,mode TEXT NOT NULL,brief TEXT,status TEXT DEFAULT 'active',world_id INTEGER,created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE design_versions(id SERIAL PRIMARY KEY,project_id INTEGER REFERENCES projects(id),parent_id INTEGER,mode TEXT NOT NULL,prompt TEXT,spec_sheet JSONB DEFAULT '{}',encryption_iv TEXT,created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE assets(id SERIAL PRIMARY KEY,version_id INTEGER REFERENCES design_versions(id),type TEXT NOT NULL,encrypted_url TEXT,salt TEXT,iv TEXT,size_bytes INTEGER,created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE design_memories(id SERIAL PRIMARY KEY,project_id INTEGER REFERENCES projects(id),content TEXT NOT NULL,embedding vector(1536),memory_type TEXT DEFAULT 'design',metadata JSONB DEFAULT '{}',created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE usage_events(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),feature TEXT NOT NULL,quantity INTEGER DEFAULT 1,metadata JSONB DEFAULT '{}',created_at TIMESTAMPTZ DEFAULT now());
+CREATE INDEX idx_sub_user ON subscriptions(user_id);
+CREATE INDEX idx_sub_status ON subscriptions(status);
+CREATE INDEX idx_projects_user ON projects(user_id);
+CREATE INDEX idx_versions_project ON design_versions(project_id);
+CREATE INDEX idx_usage_user_feature ON usage_events(user_id,feature);
+CREATE INDEX idx_memories_embedding ON design_memories USING hnsw (embedding vector_cosine_ops);

@@ -1,0 +1,1 @@
+{"name":"forge-ai","private":true,"version":"0.1.0","workspaces":["apps/*","packages/*","services/*"],"scripts":{"dev":"turbo run dev","build":"turbo run build","db:up":"docker compose up postgres redis -d","api":"uvicorn services.api.app.main:app --reload --port 8000"},"devDependencies":{"turbo":"^2.0.0","typescript":"^5.4.0"}}
