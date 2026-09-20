@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MODES } from '@forge/core';
@@ -13,7 +13,7 @@ interface Project {
   created_at: string;
 }
 
-export default function ProjectsPage() {
+function ProjectsPageInner() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -116,5 +116,13 @@ export default function ProjectsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ProjectsPage() {
+  return (
+    <Suspense fallback={<p className="text-eden-sage">Loading…</p>}>
+      <ProjectsPageInner />
+    </Suspense>
   );
 }
