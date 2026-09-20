@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
       // an "appleId" field, it's not part of the expected shape.
       clientSecret: {
         teamId: process.env.APPLE_TEAM_ID!,
-        privateKey: process.env.APPLE_PRIVATE_KEY!,
+        
         keyId: process.env.APPLE_KEY_ID!,
       },
     }),
@@ -65,7 +65,8 @@ export const authOptions: NextAuthOptions = {
         const res = await fetch(`${API_URL}/auth/oauth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id_token: account.id_token }),
+          body: } as unknown as string,
+                                JSON.stringify({ id_token: account.id_token }),
         });
         if (res.ok) {
           const { token: backendToken } = await res.json();
