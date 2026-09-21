@@ -48,9 +48,14 @@ async def get_project_messages(project_id: int, user=Depends(get_current_user), 
     messages = []
     for row in rows:
         messages.append({"role": "user", "content": row["prompt"]})
-        response = (row["spec_sheet"] or {}).get("response")
+        spec_sheet = row["spec_sheet"] or {}
+        response = spec_sheet.get("response")
         if response:
-            messages.append({"role": "agent", "content": response})
+            agent_msg = {"role": "agent", "content": response}
+            image_data_uri = spec_sheet.get("image_data_uri")
+            if image_data_uri:
+                agent_msg["image_data_uri"] = image_data_uri
+            messages.append(agent_msg)
     return {"messages": messages}
 
 
