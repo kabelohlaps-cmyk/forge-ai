@@ -93,9 +93,7 @@ export default function ProjectChatPage() {
 
   function handleCancelSketch() {
     setSketchIndex(null);
-  }
-
-  async function handleSketchSave(dataUri: string) {
+  }async function handleSketchSave(dataUri: string) {
     if (!backendToken || !project || sketchIndex === null) return;
     const index = sketchIndex;
     const msg = messages[index];
@@ -172,4 +170,4 @@ export default function ProjectChatPage() {
       {sending && <p className="text-xs text-eden-stone mt-2">The Gardener is thinking…</p>}
     </div>
   );
-}
+               }
