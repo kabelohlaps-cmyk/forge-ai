@@ -236,7 +236,7 @@ export default function SketchCanvas({
 
   function renderLayerCanvas(layer: Layer, dpr: number, devW: number, devH: number): HTMLCanvasElement {
     const state = drawingRef.current;
-    const let isActiveTarget = false;
+     let isActiveTarget = false;
     if (state.mode === "draw" || state.mode === "drag") {
       isActiveTarget = state.layerId === layer.id;
     }
