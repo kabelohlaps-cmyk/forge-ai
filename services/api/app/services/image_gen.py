@@ -20,7 +20,6 @@ IMAGE_MODEL = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")
 
 _client: genai.Client | None = None
 
-
 def _get_client() -> genai.Client:
     global _client
     if _client is None:
@@ -29,7 +28,6 @@ def _get_client() -> genai.Client:
             raise RuntimeError("GEMINI_API_KEY is not set")
         _client = genai.Client(api_key=api_key)
     return _client
-
 
 def data_uri_to_bytes(data_uri: str) -> tuple[bytes, str]:
     """
@@ -42,7 +40,6 @@ def data_uri_to_bytes(data_uri: str) -> tuple[bytes, str]:
         raise ValueError("Not a valid data URI")
     mime_type, b64_payload = match.group(1), match.group(2)
     return base64.b64decode(b64_payload), mime_type
-
 
 async def generate_design_image(
     prompt: str,
@@ -95,7 +92,6 @@ async def generate_design_image(
             return part.inline_data.data
 
     raise RuntimeError("Image model response contained no image data")
-
 
 def bytes_to_data_uri(image_bytes: bytes, mime_type: str = "image/png") -> str:
     b64 = base64.b64encode(image_bytes).decode()
