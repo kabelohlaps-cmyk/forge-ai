@@ -1,1 +1,14 @@
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <ellipse cx="400" cy="450" rx="220" ry="300" fill="none" stroke="#8a8a8a" stroke-width="2"/>
+  <line x1="400" y1="150" x2="400" y2="750" stroke="#c0c0c0" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="180" y1="330" x2="620" y2="330" stroke="#8a8a8a" stroke-width="1"/>
+  <text x="630" y="335" font-size="18" fill="#8a8a8a">Brow</text>
+  <line x1="180" y1="440" x2="620" y2="440" stroke="#8a8a8a" stroke-width="1"/>
+  <text x="630" y="445" font-size="18" fill="#8a8a8a">Eye</text>
+  <line x1="180" y1="560" x2="620" y2="560" stroke="#8a8a8a" stroke-width="1"/>
+  <text x="630" y="565" font-size="18" fill="#8a8a8a">Nose</text>
+  <line x1="180" y1="650" x2="620" y2="650" stroke="#8a8a8a" stroke-width="1"/>
+  <text x="630" y="655" font-size="18" fill="#8a8a8a">Mouth</text>
+  <line x1="180" y1="740" x2="620" y2="740" stroke="#8a8a8a" stroke-width="1"/>
+  <text x="630" y="745" font-size="18" fill="#8a8a8a">Chin</text>
+</svg>
