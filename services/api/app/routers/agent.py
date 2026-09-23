@@ -7,12 +7,10 @@ from app.services.image_gen import generate_design_image, bytes_to_data_uri, dat
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
-
 class AgentRequest(BaseModel):
     project_id: int
     mode: str
     prompt: str
-
 
 class ImageRequest(BaseModel):
     project_id: int
@@ -22,7 +20,6 @@ class ImageRequest(BaseModel):
     # canvas (or an uploaded photo of a paper sketch). When present, the AI
     # refines/renders THIS drawing instead of inventing a scene from scratch.
     sketch_data_uri: str | None = None
-
 
 def _extract_text(content) -> str:
     """
@@ -49,7 +46,6 @@ def _extract_text(content) -> str:
         return "".join(parts)
     return str(content)
 
-
 @router.post("/invoke")
 async def invoke_agent(body: AgentRequest, user=Depends(get_current_user), db=Depends(get_db)):
     state = {
@@ -61,18 +57,11 @@ async def invoke_agent(body: AgentRequest, user=Depends(get_current_user), db=De
         "character_context": None,
         "design_version": 1,
     }
-    # thread_id ties this call to the project's ongoing MemorySaver session --
-    # see orchestrator.py for what that does and doesn't persist.
     config = {"configurable": {"thread_id": f"project_{body.project_id}"}}
     result = await forge_graph.ainvoke(state, config=config)
 
     agent_reply = _extract_text(result["messages"][-1]["content"])
 
-    # Durable log: one row per turn, independent of the in-memory checkpointer.
-    # NOTE: spec_sheet is passed as a plain dict, not json.dumps(...) -- the
-    # asyncpg connection pool has a jsonb codec registered (see db.py) that
-    # handles serialization itself. Pre-serializing here would double-encode
-    # it and break the very next read of this row.
     row = await db.fetchrow(
         "INSERT INTO design_versions (project_id, mode, prompt, spec_sheet) VALUES ($1, $2, $3, $4) RETURNING id",
         body.project_id,
@@ -82,7 +71,6 @@ async def invoke_agent(body: AgentRequest, user=Depends(get_current_user), db=De
     )
 
     return {"result": result, "reply": agent_reply, "design_version_id": row["id"]}
-
 
 @router.post("/generate-image")
 async def generate_image(body: ImageRequest, user=Depends(get_current_user), db=Depends(get_db)):
