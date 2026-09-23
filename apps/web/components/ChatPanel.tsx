@@ -13,10 +13,12 @@ export function ChatPanel({
   messages,
   onSend,
   onGenerateImage,
+  onOpenSketch,
 }: {
   messages: Message[];
   onSend: (t: string) => void;
   onGenerateImage?: (index: number) => void;
+  onOpenSketch?: (index: number) => void;
 }) {
   return (
     <div className="eden-panel flex h-full flex-col overflow-hidden">
@@ -58,14 +60,27 @@ export function ChatPanel({
               />
             )}
 
-            {m.role === 'agent' && !m.image_data_uri && onGenerateImage && (
-              <button
-                onClick={() => onGenerateImage(i)}
-                disabled={m.imageLoading}
-                className="eden-btn mt-2 text-xs disabled:opacity-50"
-              >
-                {m.imageLoading ? 'Rendering…' : '✦ Generate Image'}
-              </button>
+            {m.role === 'agent' && !m.image_data_uri && (onGenerateImage || onOpenSketch) && (
+              <div className="mt-2 flex gap-2">
+                {onGenerateImage && (
+                  <button
+                    onClick={() => onGenerateImage(i)}
+                    disabled={m.imageLoading}
+                    className="eden-btn text-xs disabled:opacity-50"
+                  >
+                    {m.imageLoading ? 'Rendering…' : '✦ Generate Image'}
+                  </button>
+                )}
+                {onOpenSketch && (
+                  <button
+                    onClick={() => onOpenSketch(i)}
+                    disabled={m.imageLoading}
+                    className="eden-btn text-xs disabled:opacity-50"
+                  >
+                    ✎ Sketch &amp; Refine
+                  </button>
+                )}
+              </div>
             )}
           </motion.div>
         ))}
@@ -93,4 +108,4 @@ export function ChatPanel({
       </form>
     </div>
   );
-            }
+}
