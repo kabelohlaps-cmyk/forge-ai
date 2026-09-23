@@ -1,1 +1,16 @@
 
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <line x1="0" y1="400" x2="800" y2="400" stroke="#8a8a8a" stroke-width="2"/>
+  <text x="10" y="392" font-size="20" fill="#8a8a8a">Horizon</text>
+  <circle cx="400" cy="400" r="5" fill="#8a8a8a"/>
+  <text x="410" y="392" font-size="20" fill="#8a8a8a">VP</text>
+  <line x1="400" y1="400" x2="0" y2="0" stroke="#c0c0c0" stroke-width="1"/>
+  <line x1="400" y1="400" x2="800" y2="0" stroke="#c0c0c0" stroke-width="1"/>
+  <line x1="400" y1="400" x2="0" y2="1000" stroke="#c0c0c0" stroke-width="1"/>
+  <line x1="400" y1="400" x2="800" y2="1000" stroke="#c0c0c0" stroke-width="1"/>
+  <line x1="400" y1="400" x2="0" y2="700" stroke="#dcdcdc" stroke-width="1"/>
+  <line x1="400" y1="400" x2="800" y2="700" stroke="#dcdcdc" stroke-width="1"/>
+  <line x1="400" y1="400" x2="0" y2="1000" stroke="#dcdcdc" stroke-width="1"/>
+  <line x1="100" y1="1000" x2="400" y2="400" stroke="#eaeaea" stroke-width="1"/>
+  <line x1="700" y1="1000" x2="400" y2="400" stroke="#eaeaea" stroke-width="1"/>
+</svg>
