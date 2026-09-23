@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from app.db import get_db
 from app.auth import get_current_user
+import json
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -48,7 +49,11 @@ async def get_project_messages(project_id: int, user=Depends(get_current_user), 
     messages = []
     for row in rows:
         messages.append({"role": "user", "content": row["prompt"]})
-        spec_sheet = row["spec_sheet"] or {}
+        raw_spec_sheet = row["spec_sheet"] or {}
+        # asyncpg returns JSONB columns as a raw JSON string, not a parsed
+        # dict, unless a codec is registered -- parse defensively here so
+        # this works whether or not that's the case.
+        spec_sheet = json.loads(raw_spec_sheet) if isinstance(raw_spec_sheet, str) else raw_spec_sheet
         response = spec_sheet.get("response")
         if response:
             agent_msg = {"role": "agent", "content": response}
