@@ -1,1 +1,17 @@
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <circle cx="400" cy="120" r="60" fill="none" stroke="#8a8a8a" stroke-width="2"/>
+  <ellipse cx="400" cy="320" rx="90" ry="130" fill="none" stroke="#8a8a8a" stroke-width="2"/>
+  <path d="M320,440 Q400,480 480,440 L460,560 Q400,590 340,560 Z" fill="none" stroke="#8a8a8a" stroke-width="2"/>
+  <line x1="330" y1="220" x2="230" y2="400" stroke="#8a8a8a" stroke-width="2"/>
+  <circle cx="230" cy="400" r="8" fill="none" stroke="#8a8a8a" stroke-width="2"/>
+  <line x1="230" y1="400" x2="210" y2="560" stroke="#8a8a8a" stroke-width="2"/>
+  <line x1="470" y1="220" x2="570" y2="400" stroke="#8a8a8a" stroke-width="2"/>
+  <circle cx="570" cy="400" r="8" fill="none" stroke="#8a8a8a" stroke-width="2"/>
+  <line x1="570" y1="400" x2="590" y2="560" stroke="#8a8a8a" stroke-width="2"/>
+  <line x1="360" y1="580" x2="340" y2="780" stroke="#8a8a8a" stroke-width="2"/>
+  <circle cx="340" cy="780" r="8" fill="none" stroke="#8a8a8a" stroke-width="2"/>
+  <line x1="340" y1="780" x2="330" y2="960" stroke="#8a8a8a" stroke-width="2"/>
+  <line x1="440" y1="580" x2="460" y2="780" stroke="#8a8a8a" stroke-width="2"/>
+  <circle cx="460" cy="780" r="8" fill="none" stroke="#8a8a8a" stroke-width="2"/>
+  <line x1="460" y1="780" x2="470" y2="960" stroke="#8a8a8a" stroke-width="2"/>
+</svg>
