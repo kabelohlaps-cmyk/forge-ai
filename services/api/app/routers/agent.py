@@ -4,7 +4,6 @@ from app.auth import get_current_user
 from app.db import get_db
 from app.agents.orchestrator import forge_graph
 from app.services.image_gen import generate_design_image, bytes_to_data_uri
-import json
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -19,6 +18,32 @@ class ImageRequest(BaseModel):
     project_id: int
     mode: str
     prompt: str
+
+
+def _extract_text(content) -> str:
+    """
+    Gemini/LangChain message content isn't always a plain string -- for
+    some models (and whenever extended-thinking signatures are attached)
+    it comes back as a list of content blocks like
+    [{"type": "text", "text": "...", "extras": {...}}]. Storing that raw
+    structure breaks both JSON round-tripping and the frontend (which
+    expects message.content to be a string it can render directly).
+    This flattens any shape down to the plain text.
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict):
+                if block.get("type") == "text" and "text" in block:
+                    parts.append(block["text"])
+                elif "text" in block:
+                    parts.append(block["text"])
+            elif isinstance(block, str):
+                parts.append(block)
+        return "".join(parts)
+    return str(content)
 
 
 @router.post("/invoke")
@@ -37,15 +62,19 @@ async def invoke_agent(body: AgentRequest, user=Depends(get_current_user), db=De
     config = {"configurable": {"thread_id": f"project_{body.project_id}"}}
     result = await forge_graph.ainvoke(state, config=config)
 
-    agent_reply = result["messages"][-1]["content"]
+    agent_reply = _extract_text(result["messages"][-1]["content"])
 
     # Durable log: one row per turn, independent of the in-memory checkpointer.
+    # NOTE: spec_sheet is passed as a plain dict, not json.dumps(...) -- the
+    # asyncpg connection pool has a jsonb codec registered (see db.py) that
+    # handles serialization itself. Pre-serializing here would double-encode
+    # it and break the very next read of this row.
     row = await db.fetchrow(
         "INSERT INTO design_versions (project_id, mode, prompt, spec_sheet) VALUES ($1, $2, $3, $4) RETURNING id",
         body.project_id,
         body.mode,
         body.prompt,
-        json.dumps({"response": agent_reply}),
+        {"response": agent_reply},
     )
 
     return {"result": result, "reply": agent_reply, "design_version_id": row["id"]}
@@ -82,7 +111,7 @@ async def generate_image(body: ImageRequest, user=Depends(get_current_user), db=
 
     await db.execute(
         "UPDATE design_versions SET spec_sheet=$1 WHERE id=$2",
-        json.dumps(spec_sheet),
+        spec_sheet,
         latest["id"],
     )
 
