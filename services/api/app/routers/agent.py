@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from app.auth import get_current_user
 from app.db import get_db
 from app.agents.orchestrator import forge_graph
-from app.services.image_gen import generate_design_image, bytes_to_data_uri
+from app.services.image_gen import generate_design_image, bytes_to_data_uri, data_uri_to_bytes
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -18,6 +18,10 @@ class ImageRequest(BaseModel):
     project_id: int
     mode: str
     prompt: str
+    # Optional: a "data:image/png;base64,...." string from the in-app sketch
+    # canvas (or an uploaded photo of a paper sketch). When present, the AI
+    # refines/renders THIS drawing instead of inventing a scene from scratch.
+    sketch_data_uri: str | None = None
 
 
 def _extract_text(content) -> str:
@@ -86,6 +90,9 @@ async def generate_image(body: ImageRequest, user=Depends(get_current_user), db=
     Generates an image for the most recent design_versions row in this
     project (the one /agent/invoke just created) and attaches it there,
     so it shows up alongside that turn when the chat history reloads.
+
+    If body.sketch_data_uri is set (drawn on the in-app canvas), the AI
+    refines that sketch instead of generating from the text prompt alone.
     """
     project = await db.fetchrow(
         "SELECT id FROM projects WHERE id=$1 AND user_id=$2", body.project_id, user["id"]
@@ -100,8 +107,18 @@ async def generate_image(body: ImageRequest, user=Depends(get_current_user), db=
     if not latest:
         raise HTTPException(400, "No conversation turn to attach this image to yet")
 
+    sketch_bytes = None
+    sketch_mime_type = "image/png"
+    if body.sketch_data_uri:
+        try:
+            sketch_bytes, sketch_mime_type = data_uri_to_bytes(body.sketch_data_uri)
+        except ValueError:
+            raise HTTPException(400, "sketch_data_uri is not a valid image data URI")
+
     try:
-        image_bytes = await generate_design_image(body.prompt, body.mode)
+        image_bytes = await generate_design_image(
+            body.prompt, body.mode, sketch_bytes=sketch_bytes, sketch_mime_type=sketch_mime_type
+        )
     except Exception as e:
         raise HTTPException(502, f"Image generation failed: {e}")
 
