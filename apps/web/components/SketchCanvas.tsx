@@ -518,4 +518,340 @@ export default function SketchCanvas({
   }
 
   function deleteLayer(id: string) {
-    cons
+    const layer = layers.find((l) => l.id === id);
+    if (!layer) return;
+    if (layers.length <= 1) {
+      window.alert("You need at least one layer.");
+      return;
+    }
+    if (
+      (layer.strokes.length > 0 || layer.parts.length > 0) &&
+      !window.confirm(`Delete "${layer.name}"? It has content that will be lost.`)
+    ) {
+      return;
+    }
+    pushUndoSnapshot();
+    layerCanvasesRef.current.delete(id);
+    layerCacheRef.current.delete(id);
+    const remaining = layers.filter((l) => l.id !== id);
+    setLayers(remaining);
+    if (activeLayerId === id) setActiveLayerId(remaining[remaining.length - 1].id);
+    if (selectedPartInstanceId && layer.parts.some((p) => p.instanceId === selectedPartInstanceId)) {
+      setSelectedPartInstanceId(null);
+    }
+  }
+
+  function toggleLayerVisibility(id: string) {
+    pushUndoSnapshot();
+    setLayers((prev) => prev.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)));
+  }
+
+  function moveLayer(id: string, dir: 1 | -1) {
+    const idx = layers.findIndex((l) => l.id === id);
+    if (idx === -1) return;
+    const swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= layers.length) return;
+    pushUndoSnapshot();
+    const next = [...layers];
+    [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+    setLayers(next);
+  }
+
+  function handleClear() {
+    if (!window.confirm("Clear the entire sketch across all layers?")) return;
+    pushUndoSnapshot();
+    setLayers((prev) => prev.map((l) => ({ ...l, strokes: [], parts: [] })));
+    setSelectedPartInstanceId(null);
+  }
+
+  function handleUseSketch() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    suppressSelectionRef.current = true;
+    drawAll();
+    const dataUri = canvas.toDataURL("image/png");
+    suppressSelectionRef.current = false;
+    drawAll();
+    onSave(dataUri);
+  }
+
+  const categories = Array.from(new Set(parts.map((p) => p.category)));
+  const filteredParts =
+    activeCategory === "all" ? parts : parts.filter((p) => p.category === activeCategory);
+
+  return (
+    <div className="flex flex-col gap-2 w-full max-w-full select-none">
+      <div className="eden-panel p-2 flex flex-wrap items-center gap-2 text-xs">
+        <button
+          type="button"
+          onClick={handleUndo}
+          disabled={undoStack.length === 0}
+          className="eden-btn px-2 disabled:opacity-40"
+        >
+          ↺ Undo
+        </button>
+        <button type="button" onClick={handleClear} className="eden-btn px-2">
+          Clear
+        </button>
+        {guideOverlayUrl && (
+          <button
+            type="button"
+            onClick={() => setShowGuide((s) => !s)}
+            className={`eden-btn px-2 ${showGuide ? "text-eden-gold-light" : ""}`}
+          >
+            Guide
+          </button>
+        )}
+        <div className="flex-1" />
+        <button
+          type="button"
+          onClick={() => setLayersPanelOpen((o) => !o)}
+          className={`eden-btn px-2 ${layersPanelOpen ? "text-eden-gold-light" : ""}`}
+        >
+          Layers {layersPanelOpen ? "▴" : "▾"}
+        </button>
+        {parts.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setPartsPanelOpen((o) => !o)}
+            className={`eden-btn px-2 ${partsPanelOpen ? "text-eden-gold-light" : ""}`}
+          >
+            Parts {partsPanelOpen ? "▴" : "▾"}
+          </button>
+        )}
+      </div>
+
+      {layersPanelOpen && (
+        <div className="eden-panel p-2 text-xs">
+          <div className="max-h-40 overflow-y-auto flex flex-col gap-1">
+            {[...layers].reverse().map((layer) => {
+              const idx = layers.findIndex((l) => l.id === layer.id);
+              return (
+                <div
+                  key={layer.id}
+                  onClick={() => setActiveLayerId(layer.id)}
+                  className={`flex items-center gap-1 p-1 rounded cursor-pointer ${
+                    layer.id === activeLayerId ? "bg-black/30 text-eden-gold-light" : ""
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleLayerVisibility(layer.id);
+                    }}
+                    className="eden-btn px-1.5"
+                  >
+                    {layer.visible ? "👁" : "—"}
+                  </button>
+                  <span className="flex-1 truncate">{layer.name}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveLayer(layer.id, 1);
+                    }}
+                    disabled={idx === layers.length - 1}
+                    className="eden-btn px-1.5 disabled:opacity-30"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveLayer(layer.id, -1);
+                    }}
+                    disabled={idx === 0}
+                    className="eden-btn px-1.5 disabled:opacity-30"
+                  >
+                    ▼
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteLayer(layer.id);
+                    }}
+                    disabled={layers.length <= 1}
+                    className="eden-btn px-1.5 disabled:opacity-30"
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <button type="button" onClick={addLayer} className="eden-btn w-full mt-2">
+            + Add Layer
+          </button>
+        </div>
+      )}
+
+      {partsPanelOpen && parts.length > 0 && (
+        <div className="eden-panel p-2 text-xs">
+          {categories.length > 1 && (
+            <div className="flex gap-1 overflow-x-auto mb-2 pb-1">
+              <button
+                type="button"
+                onClick={() => setActiveCategory("all")}
+                className={`eden-btn px-2 whitespace-nowrap ${
+                  activeCategory === "all" ? "text-eden-gold-light" : ""
+                }`}
+              >
+                All
+              </button>
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setActiveCategory(c)}
+                  className={`eden-btn px-2 whitespace-nowrap capitalize ${
+                    activeCategory === c ? "text-eden-gold-light" : ""
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+            {filteredParts.map((part) => (
+              <button
+                key={part.id}
+                type="button"
+                onClick={() => placePart(part)}
+                className="eden-btn flex flex-col items-center p-1 gap-0.5"
+                title={part.label}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={part.url} alt={part.label} className="w-9 h-9 object-contain" draggable={false} />
+                <span className="text-[9px] leading-tight truncate w-full text-center">{part.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div
+        ref={containerRef}
+        className="relative w-full h-[55vh] min-h-[320px] rounded-lg overflow-hidden border border-eden-gold/30 bg-white"
+      >
+        {guideOverlayUrl && showGuide && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={guideOverlayUrl}
+            alt="Guide overlay"
+            className="absolute inset-0 w-full h-full object-contain opacity-40 pointer-events-none select-none"
+            draggable={false}
+          />
+        )}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full"
+          style={{ touchAction: "none" }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={finishPointer}
+          onPointerCancel={finishPointer}
+        />
+      </div>
+
+      {selectedPartInstanceId && (
+        <div className="eden-panel p-2 flex items-center justify-center gap-2 text-xs flex-wrap">
+          <span className="text-eden-gold-light">Part selected</span>
+          <button type="button" onClick={scaleDownSelected} className="eden-btn px-2">
+            −
+          </button>
+          <button type="button" onClick={scaleUpSelected} className="eden-btn px-2">
+            +
+          </button>
+          <button type="button" onClick={rotateSelectedLeft} className="eden-btn px-2">
+            ⟲
+          </button>
+          <button type="button" onClick={rotateSelectedRight} className="eden-btn px-2">
+            ⟳
+          </button>
+          <button type="button" onClick={deleteSelectedPart} className="eden-btn px-2 text-red-400">
+            ✕ Delete
+          </button>
+        </div>
+      )}
+
+      <div className="eden-panel p-2 flex flex-col gap-2 text-xs">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => {
+                setBrushColor(c);
+                setErase(false);
+              }}
+              className="w-6 h-6 rounded-full border-2"
+              style={{
+                backgroundColor: c,
+                borderColor: !erase && brushColor === c ? SELECTION_COLOR : "transparent",
+              }}
+              aria-label={`Color ${c}`}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => setErase((e) => !e)}
+            className={`eden-btn px-2 ml-1 ${erase ? "text-eden-gold-light" : ""}`}
+          >
+            Eraser
+          </button>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setBrushSize(BRUSH_PRESETS.small)}
+            className={`eden-btn px-2 ${brushSize === BRUSH_PRESETS.small ? "text-eden-gold-light" : ""}`}
+          >
+            S
+          </button>
+          <button
+            type="button"
+            onClick={() => setBrushSize(BRUSH_PRESETS.medium)}
+            className={`eden-btn px-2 ${brushSize === BRUSH_PRESETS.medium ? "text-eden-gold-light" : ""}`}
+          >
+            M
+          </button>
+          <button
+            type="button"
+            onClick={() => setBrushSize(BRUSH_PRESETS.large)}
+            className={`eden-btn px-2 ${brushSize === BRUSH_PRESETS.large ? "text-eden-gold-light" : ""}`}
+          >
+            L
+          </button>
+          <input
+            type="range"
+            min={1}
+            max={40}
+            value={brushSize}
+            onChange={(e) => setBrushSize(Number(e.target.value))}
+            className="flex-1 accent-[#e8c468]"
+          />
+          <span className="w-20 text-right whitespace-nowrap">Size: {brushSize}px</span>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="eden-btn flex-1">
+            Cancel
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={handleUseSketch}
+          className="eden-btn flex-1 text-eden-gold-light font-semibold"
+        >
+          Use This Sketch
+        </button>
+      </div>
+    </div>
+  );
+}
