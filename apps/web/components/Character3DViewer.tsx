@@ -9,25 +9,19 @@ const MODEL_URL =
   'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/CesiumMan/glTF-Binary/CesiumMan.glb';
 
 interface BoneRig {
-  upperArms: THREE.Bone[];
-  lowerArms: THREE.Bone[];
-  upperLegs: THREE.Bone[];
-  lowerLegs: THREE.Bone[];
+  arms: THREE.Bone[];
+  legs: THREE.Bone[];
 }
 
 function matchBones(root: THREE.Object3D): BoneRig {
-  const rig: BoneRig = { upperArms: [], lowerArms: [], upperLegs: [], lowerLegs: [] };
+  const rig: BoneRig = { arms: [], legs: [] };
   root.traverse((obj) => {
     if (!(obj instanceof THREE.Bone)) return;
     const n = obj.name.toLowerCase();
-    const isArm = n.includes('arm');
-    const isLeg = n.includes('leg') || n.includes('thigh') || n.includes('shin') || n.includes('calf');
-    const isUpper = n.includes('up') || n.includes('thigh') || n.includes('shoulder');
-    const isLower = n.includes('low') || n.includes('fore') || n.includes('shin') || n.includes('calf');
-    if (isArm && isUpper) rig.upperArms.push(obj);
-    else if (isArm && isLower) rig.lowerArms.push(obj);
-    else if (isLeg && isUpper) rig.upperLegs.push(obj);
-    else if (isLeg && isLower) rig.lowerLegs.push(obj);
+    if (n.includes('arm')) rig.arms.push(obj);
+    else if (n.includes('leg') || n.includes('thigh') || n.includes('shin') || n.includes('calf')) {
+      rig.legs.push(obj);
+    }
   });
   return rig;
 }
@@ -69,8 +63,8 @@ function Model({ heightScale, buildScale, armScale, legScale, onRigDetected }: M
     });
     onRigDetected({
       names,
-      armCount: rig.upperArms.length + rig.lowerArms.length,
-      legCount: rig.upperLegs.length + rig.lowerLegs.length,
+      armCount: rig.arms.length,
+      legCount: rig.legs.length,
     });
   }, [scene, onRigDetected]);
 
@@ -83,7 +77,7 @@ function Model({ heightScale, buildScale, armScale, legScale, onRigDetected }: M
   useEffect(() => {
     const rig = rigRef.current;
     if (!rig) return;
-    for (const bone of [...rig.upperArms, ...rig.lowerArms]) {
+    for (const bone of rig.arms) {
       bone.scale.y = armScale;
     }
   }, [armScale]);
@@ -91,7 +85,7 @@ function Model({ heightScale, buildScale, armScale, legScale, onRigDetected }: M
   useEffect(() => {
     const rig = rigRef.current;
     if (!rig) return;
-    for (const bone of [...rig.upperLegs, ...rig.lowerLegs]) {
+    for (const bone of rig.legs) {
       bone.scale.y = legScale;
     }
   }, [legScale]);
