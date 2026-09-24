@@ -32,15 +32,21 @@ function matchBones(root: THREE.Object3D): BoneRig {
   return rig;
 }
 
+interface RigSummary {
+  names: string[];
+  armCount: number;
+  legCount: number;
+}
+
 interface ModelProps {
   heightScale: number;
   buildScale: number;
   armScale: number;
   legScale: number;
-  onBonesDetected: (names: string[]) => void;
+  onRigDetected: (summary: RigSummary) => void;
 }
 
-function Model({ heightScale, buildScale, armScale, legScale, onBonesDetected }: ModelProps) {
+function Model({ heightScale, buildScale, armScale, legScale, onRigDetected }: ModelProps) {
   const group = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF(MODEL_URL);
   const { actions } = useAnimations(animations, group);
@@ -61,8 +67,12 @@ function Model({ heightScale, buildScale, armScale, legScale, onBonesDetected }:
     scene.traverse((obj) => {
       if (obj instanceof THREE.Bone) names.push(obj.name);
     });
-    onBonesDetected(names);
-  }, [scene, onBonesDetected]);
+    onRigDetected({
+      names,
+      armCount: rig.upperArms.length + rig.lowerArms.length,
+      legCount: rig.upperLegs.length + rig.lowerLegs.length,
+    });
+  }, [scene, onRigDetected]);
 
   useEffect(() => {
     if (group.current) {
@@ -137,20 +147,15 @@ export default function Character3DViewer() {
   const [armScale, setArmScale] = useState(1);
   const [legScale, setLegScale] = useState(1);
   const [boneNames, setBoneNames] = useState<string[]>([]);
-  const [showBones, setShowBones] = useState(false);
+  const [armCount, setArmCount] = useState(0);
+  const [legCount, setLegCount] = useState(0);
+  const [showBones, setShowBones] = useState(true);
 
-  const handleBonesDetected = useCallback((names: string[]) => {
-    setBoneNames(names);
+  const handleRigDetected = useCallback((summary: RigSummary) => {
+    setBoneNames(summary.names);
+    setArmCount(summary.armCount);
+    setLegCount(summary.legCount);
   }, []);
-
-  const hasArmBones = boneNames.some((n) => n.toLowerCase().includes('arm'));
-  const hasLegBones = boneNames.some(
-    (n) =>
-      n.toLowerCase().includes('leg') ||
-      n.toLowerCase().includes('thigh') ||
-      n.toLowerCase().includes('shin') ||
-      n.toLowerCase().includes('calf')
-  );
 
   function resetAll() {
     setHeightScale(1);
@@ -171,7 +176,7 @@ export default function Character3DViewer() {
               buildScale={buildScale}
               armScale={armScale}
               legScale={legScale}
-              onBonesDetected={handleBonesDetected}
+              onRigDetected={handleRigDetected}
             />
             <Environment preset="city" />
           </Suspense>
@@ -195,13 +200,11 @@ export default function Character3DViewer() {
         </div>
         <Slider label="Height" value={heightScale} onChange={setHeightScale} />
         <Slider label="Build" value={buildScale} onChange={setBuildScale} />
-        <Slider label="Arm length" value={armScale} onChange={setArmScale} disabled={!hasArmBones} />
-        <Slider label="Leg length" value={legScale} onChange={setLegScale} disabled={!hasLegBones} />
-        {(!hasArmBones || !hasLegBones) && (
-          <p className="text-[10px] opacity-50">
-            Some sliders are disabled until we confirm this rig's bone names — see the list below.
-          </p>
-        )}
+        <Slider label="Arm length" value={armScale} onChange={setArmScale} disabled={armCount === 0} />
+        <Slider label="Leg length" value={legScale} onChange={setLegScale} disabled={legCount === 0} />
+        <p className="text-[10px] opacity-50">
+          Matched {armCount} arm bone(s), {legCount} leg bone(s) out of {boneNames.length} total.
+        </p>
       </div>
 
       <div className="eden-panel p-2 text-xs">
@@ -213,7 +216,7 @@ export default function Character3DViewer() {
           Detected bones ({boneNames.length}) {showBones ? '▴' : '▾'}
         </button>
         {showBones && (
-          <div className="mt-2 max-h-32 overflow-y-auto opacity-70 leading-relaxed">
+          <div className="mt-2 max-h-40 overflow-y-auto opacity-70 leading-relaxed break-words">
             {boneNames.length === 0 ? 'none found yet' : boneNames.join(', ')}
           </div>
         )}
@@ -222,4 +225,4 @@ export default function Character3DViewer() {
   );
 }
 
-useGLTF.preload(MODEL_URL);
+useGLTF.preload(MODEL_URL);I'm 
