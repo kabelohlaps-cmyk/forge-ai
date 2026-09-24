@@ -259,8 +259,8 @@ export default function SketchCanvas({
     lctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     for (const stroke of layer.strokes) drawStroke(lctx, stroke);
-    if (state.mode === "draw" && state.layerId === layer.id) {
-      drawStroke(lctx, state.stroke);
+    if (state.mode === "draw" && (state as { layerId?: string }).layerId === layer.id) {
+      drawStroke(lctx, (state as { stroke: Stroke }).stroke);
     }
     for (const part of layer.parts) drawPart(lctx, part, imageCache.current);
 
@@ -400,18 +400,26 @@ export default function SketchCanvas({
     if (state.mode === "draw") {
       e.preventDefault();
       const pos = getPos(e, canvas);
-      state.stroke.points.push(pos);
+      (state as { stroke: Stroke }).stroke.points.push(pos);
       drawAll();
     } else if (state.mode === "drag") {
       e.preventDefault();
       const pos = getPos(e, canvas);
-      const dx = pos.x - state.startX;
-      const dy = pos.y - state.startY;
-      const layer = layersRef.current.find((l) => l.id === state.layerId);
-      const part = layer?.parts.find((p) => p.instanceId === state.partInstanceId);
+      const dragState = state as {
+        startX: number;
+        startY: number;
+        layerId: string;
+        partInstanceId: string;
+        partStartX: number;
+        partStartY: number;
+      };
+      const dx = pos.x - dragState.startX;
+      const dy = pos.y - dragState.startY;
+      const layer = layersRef.current.find((l) => l.id === dragState.layerId);
+      const part = layer?.parts.find((p) => p.instanceId === dragState.partInstanceId);
       if (part) {
-        part.x = state.partStartX + dx;
-        part.y = state.partStartY + dy;
+        part.x = dragState.partStartX + dx;
+        part.y = dragState.partStartY + dy;
         drawAll();
       }
     }
@@ -420,7 +428,8 @@ export default function SketchCanvas({
   function finishPointer() {
     const state = drawingRef.current;
     if (state.mode === "draw") {
-      const { layerId, stroke } = state;
+      const drawState = state as { layerId: string; stroke: Stroke };
+      const { layerId, stroke } = drawState;
       if (stroke.points.length > 0) {
         setLayers((prev) =>
           prev.map((l) => (l.id === layerId ? { ...l, strokes: [...l.strokes, stroke] } : l))
@@ -430,9 +439,7 @@ export default function SketchCanvas({
       setLayers(() => cloneLayers(layersRef.current));
     }
     drawingRef.current = { mode: null };
-  }
-
-  function transformSelectedPart(mutate: (p: PlacedPart) => PlacedPart) {
+  }function transformSelectedPart(mutate: (p: PlacedPart) => PlacedPart) {
     if (!selectedPartInstanceId) return;
     pushUndoSnapshot();
     setLayers((prev) =>
