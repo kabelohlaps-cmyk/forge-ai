@@ -225,4 +225,4 @@ export default function Character3DViewer() {
   );
 }
 
-useGLTF.preload(MODEL_URL);I'm 
+useGLTF.preload(MODEL_URL);
