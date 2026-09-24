@@ -388,4 +388,143 @@ function PartsPanel({
       {PART_CATEGORIES.map(({ key, label }) => (
         <div key={key} className="flex flex-col gap-1">
           <span className="text-[10px] opacity-60 uppercase">{label}</span>
-          <div className="fl
+          <div className="flex flex-wrap gap-1">
+            <button
+              type="button"
+              onClick={() => onSelect(key, null)}
+              className={`eden-btn px-2 text-xs ${selected[key] === null ? 'text-eden-gold-light' : ''}`}
+            >
+              None
+            </button>
+            {PART_DEFS.filter((p) => p.category === key).map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => onSelect(key, p.id)}
+                className={`eden-btn px-2 text-xs ${selected[key] === p.id ? 'text-eden-gold-light' : ''}`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function Character3DViewer() {
+  const [heightScale, setHeightScale] = useState(1);
+  const [buildScale, setBuildScale] = useState(1);
+  const [armScale, setArmScale] = useState(1);
+  const [legScale, setLegScale] = useState(1);
+  const [selectedParts, setSelectedParts] = useState<PartSelection>({
+    head: null,
+    hand: null,
+    back: null,
+  });
+  const [boneNames, setBoneNames] = useState<string[]>([]);
+  const [armCount, setArmCount] = useState(0);
+  const [legCount, setLegCount] = useState(0);
+  const [attachPoints, setAttachPoints] = useState<{
+    head: string | null;
+    hand: string | null;
+    back: string | null;
+  }>({ head: null, hand: null, back: null });
+  const [showBones, setShowBones] = useState(false);
+
+  const handleRigDetected = useCallback((summary: RigSummary) => {
+    setBoneNames(summary.names);
+    setArmCount(summary.armCount);
+    setLegCount(summary.legCount);
+    setAttachPoints(summary.attachPoints);
+  }, []);
+
+  const handleSelectPart = useCallback((category: PartCategory, id: string | null) => {
+    setSelectedParts((prev) => ({ ...prev, [category]: id }));
+  }, []);
+
+  function resetAll() {
+    setHeightScale(1);
+    setBuildScale(1);
+    setArmScale(1);
+    setLegScale(1);
+  }
+
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      <div className="relative w-full h-[55vh] min-h-[320px] rounded-lg overflow-hidden border border-eden-gold/30 bg-[#101014]">
+        <Canvas
+          camera={{ position: [2, 1.4, 3], fov: 45 }}
+          shadows
+          gl={{ toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
+        >
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[3, 5, 2]} intensity={1.2} castShadow />
+          <Suspense fallback={<LoadingFallback />}>
+            <Model
+              heightScale={heightScale}
+              buildScale={buildScale}
+              armScale={armScale}
+              legScale={legScale}
+              selectedParts={selectedParts}
+              onRigDetected={handleRigDetected}
+            />
+            <Environment preset="city" />
+          </Suspense>
+          <Grid
+            infiniteGrid
+            fadeDistance={20}
+            cellColor="#333333"
+            sectionColor="#555555"
+            position={[0, 0, 0]}
+          />
+          <OrbitControls enablePan={false} minDistance={1} maxDistance={8} target={[0, 1, 0]} />
+          <EffectComposer multisampling={0}>
+            <Bloom luminanceThreshold={0.5} luminanceSmoothing={0.9} intensity={0.5} mipmapBlur />
+            <SMAA />
+          </EffectComposer>
+        </Canvas>
+      </div>
+
+      <div className="eden-panel p-2 flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-eden-gold-light font-semibold">Body</span>
+          <button type="button" onClick={resetAll} className="eden-btn px-2 text-xs">
+            Reset
+          </button>
+        </div>
+        <Slider label="Height" value={heightScale} onChange={setHeightScale} />
+        <Slider label="Build" value={buildScale} onChange={setBuildScale} />
+        <Slider label="Arm length" value={armScale} onChange={setArmScale} disabled={armCount === 0} />
+        <Slider label="Leg length" value={legScale} onChange={setLegScale} disabled={legCount === 0} />
+        <p className="text-[10px] opacity-50">
+          Matched {armCount} arm bone(s), {legCount} leg bone(s) out of {boneNames.length} total.
+        </p>
+      </div>
+
+      <PartsPanel selected={selectedParts} onSelect={handleSelectPart} />
+
+      <div className="eden-panel p-2 text-xs">
+        <p className="opacity-60 mb-1">
+          Attach points — head: {attachPoints.head ?? 'none'}, hand: {attachPoints.hand ?? 'none'}, back:{' '}
+          {attachPoints.back ?? 'none'}
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowBones((s) => !s)}
+          className="eden-btn w-full text-left px-2"
+        >
+          Detected bones ({boneNames.length}) {showBones ? '▴' : '▾'}
+        </button>
+        {showBones && (
+          <div className="mt-2 max-h-40 overflow-y-auto opacity-70 leading-relaxed break-words">
+            {boneNames.length === 0 ? 'none found yet' : boneNames.join(', ')}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+useGLTF.preload(MODEL_URL);
