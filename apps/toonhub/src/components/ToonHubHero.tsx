@@ -178,17 +178,17 @@ export default function ToonHubHero() {
           <span
             style={{
               fontFamily: "'Anton', sans-serif",
-              fontSize: 'clamp(90px, 28vw, 380px)',
+              fontSize: 'clamp(110px, 40vw, 600px)',
               fontWeight: 900,
               color: '#fff',
-              opacity: 0.08,
+              opacity: 0.12,
               lineHeight: 1,
               textTransform: 'uppercase',
               letterSpacing: '-0.02em',
               whiteSpace: 'nowrap',
             }}
           >
-            3D SHAPE
+            STORM
           </span>
         </div>
 
