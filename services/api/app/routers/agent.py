@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from app.auth import get_current_user
 from app.db import get_db
+from app.access import get_owned_project, require_mode, require_render_quota, record_render
 from app.agents.orchestrator import forge_graph
 from app.services.image_gen import generate_design_image, bytes_to_data_uri, data_uri_to_bytes
 
@@ -46,8 +47,18 @@ def _extract_text(content) -> str:
         return "".join(parts)
     return str(content)
 
+def _check_mode(project, user: dict, mode: str) -> None:
+    if mode != project["mode"]:
+        raise HTTPException(400, f"This is a {project['mode']} project, not {mode}")
+    require_mode(user, mode)
+
 @router.post("/invoke")
 async def invoke_agent(body: AgentRequest, user=Depends(get_current_user), db=Depends(get_db)):
+    # Ownership matters beyond the DB write: the LangGraph thread_id below is
+    # per project, so without this check one user could read another user's
+    # conversation context back out of the model's reply.
+    project = await get_owned_project(db, body.project_id, user)
+    _check_mode(project, user, body.mode)
     state = {
         "messages": [{"role": "user", "content": body.prompt}],
         "mode": body.mode,
@@ -82,11 +93,9 @@ async def generate_image(body: ImageRequest, user=Depends(get_current_user), db=
     If body.sketch_data_uri is set (drawn on the in-app canvas), the AI
     refines that sketch instead of generating from the text prompt alone.
     """
-    project = await db.fetchrow(
-        "SELECT id FROM projects WHERE id=$1 AND user_id=$2", body.project_id, user["id"]
-    )
-    if not project:
-        raise HTTPException(404, "Project not found")
+    project = await get_owned_project(db, body.project_id, user)
+    _check_mode(project, user, body.mode)
+    await require_render_quota(db, user)
 
     latest = await db.fetchrow(
         "SELECT id, spec_sheet FROM design_versions WHERE project_id=$1 ORDER BY id DESC LIMIT 1",
@@ -119,5 +128,6 @@ async def generate_image(body: ImageRequest, user=Depends(get_current_user), db=
         spec_sheet,
         latest["id"],
     )
+    await record_render(db, user["id"], body.project_id)
 
     return {"image_data_uri": data_uri, "design_version_id": latest["id"]}
