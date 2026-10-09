@@ -50,10 +50,15 @@ jobs:
           # Matches services/api/Dockerfile
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: services/api/requirements.txt
-      - run: pip install -r services/api/requirements.txt
+          cache-dependency-path: services/api/requirements*.txt
+      - run: pip install -r services/api/requirements-dev.txt
       - name: Load schema
         run: psql -h localhost -U forge -d forge -v ON_ERROR_STOP=1 -f services/api/app/schema.sql
+      - name: Tests
+        working-directory: services/api
+        run: pytest -q
+        env:
+          TEST_DATABASE_URL: postgresql://forge:forge@localhost:5432/forge
       - name: Smoke test
         working-directory: services/api
         run: |
