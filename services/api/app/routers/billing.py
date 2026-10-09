@@ -2,9 +2,11 @@ from fastapi import APIRouter, Request, HTTPException, Depends, Header
 from pydantic import BaseModel
 from typing import Optional
 import json
+from datetime import datetime
 from app.services.paypal import paypal_service, PLANS, PlanTier
 from app.db import get_db
 from app.auth import get_current_user
+from app.services.subscriptions import downgrade_if_lapsed
 router = APIRouter(prefix="/billing", tags=["billing"])
 class SubscribeRequest(BaseModel):
     tier: PlanTier
@@ -28,18 +30,27 @@ async def paypal_webhook(request: Request, db=Depends(get_db), paypal_transmissi
         cid = res.get("custom_id",""); uid = int(cid.replace("user_","")) if cid else None
         if uid:
             tier = _resolve(res.get("plan_id"))
-            await db.execute("UPDATE subscriptions SET status='ACTIVE',tier=$1,activated_at=now() WHERE paypal_sub_id=$2", tier, res.get("id"))
+            await db.execute("UPDATE subscriptions SET status='ACTIVE',tier=$1,activated_at=now(),next_billing_at=COALESCE($3,now()+interval '1 month') WHERE paypal_sub_id=$2", tier, res.get("id"), _next_billing(res))
             await _grant(db, uid, tier)
     elif et == "BILLING.SUBSCRIPTION.CANCELLED":
+        # No downgrade here: paid features last until the end of the paid month
+        # (see app/services/subscriptions.py).
         await db.execute("UPDATE subscriptions SET status='CANCELLED',cancelled_at=now() WHERE paypal_sub_id=$1", res.get("id"))
     elif et == "BILLING.SUBSCRIPTION.SUSPENDED":
-        await db.execute("UPDATE subscriptions SET status='SUSPENDED',suspended_at=now() WHERE paypal_sub_id=$1", res.get("id"))
+        uid = await db.fetchval("UPDATE subscriptions SET status='SUSPENDED',suspended_at=now() WHERE paypal_sub_id=$1 RETURNING user_id", res.get("id"))
+        if uid: await downgrade_if_lapsed(db, uid)
     elif et == "BILLING.SUBSCRIPTION.EXPIRED":
-        await db.execute("UPDATE subscriptions SET status='EXPIRED',expired_at=now() WHERE paypal_sub_id=$1", res.get("id"))
+        uid = await db.fetchval("UPDATE subscriptions SET status='EXPIRED',expired_at=now() WHERE paypal_sub_id=$1 RETURNING user_id", res.get("id"))
+        if uid: await downgrade_if_lapsed(db, uid)
     elif et == "PAYMENT.SALE.COMPLETED":
         sid = res.get("billing_agreement_id")
         if sid: await db.execute("UPDATE subscriptions SET last_payment_at=now(),next_billing_at=now()+interval '1 month' WHERE paypal_sub_id=$1", sid)
     return {"status":"ok"}
+def _next_billing(res):
+    # PayPal's ISO timestamp, e.g. "2026-11-09T10:00:00Z"
+    raw = (res.get("billing_info") or {}).get("next_billing_time")
+    try: return datetime.fromisoformat(raw.replace("Z", "+00:00")) if raw else None
+    except ValueError: return None
 def _resolve(plan_id):
     for t, c in PLANS.items():
         if c["id"] == plan_id: return t.value

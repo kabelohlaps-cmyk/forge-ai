@@ -10,6 +10,8 @@ PLANS = {
   PlanTier.ARCHITECT: {"id": os.getenv("PAYPAL_PLAN_ARCHITECT","P-ARCHITECT-PLACEHOLDER"),"price_usd":"39.00","renders":500,"modes":["vehicle","interior","product","architecture","world","character","telecom"]},
   PlanTier.STUDIO: {"id": os.getenv("PAYPAL_PLAN_STUDIO","P-STUDIO-PLACEHOLDER"),"price_usd":"99.00","renders":-1,"modes":["vehicle","interior","product","architecture","world","character","telecom","servers"]},
 }
+# Mirrors FREE_TIER in packages/core/src/plans.ts and the users column defaults in schema.sql.
+FREE_PLAN = {"renders": 10, "modes": ["vehicle", "interior"]}
 class PayPalService:
     def __init__(self): self._t=None; self._e=None
     async def _token(self):
