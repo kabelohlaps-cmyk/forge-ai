@@ -36,7 +36,14 @@ pytest tests/test_agent.py::test_render_quota_is_enforced_and_counted   # single
 
 Database: Postgres 16 with the pgvector extension. Either run `docker compose up postgres redis -d`, which loads `services/api/app/schema.sql` on first init, or apply the schema by hand with `psql -h localhost -U forge -d forge -f services/api/app/schema.sql` (user, password and db are all `forge`). There are no migrations: `schema.sql` is the only source of truth, so schema changes mean editing it and recreating the DB. Redis is in docker-compose but no code uses it.
 
-API tests (`services/api/tests`) use FastAPI's `TestClient` against the real database. `conftest.py` stubs out Gemini (`forge_graph` and `generate_design_image` in `app.routers.agent`) and provides a `make_user` fixture with `set_plan()` and `create_project()` helpers. There are no web tests. CI (`.github/workflows/ci.yml`) runs the web typecheck and build, then the API's pytest suite, then a smoke test that starts uvicorn and curls `/health`, `/auth/register` and `/auth/login`.
+API tests (`services/api/tests`) use FastAPI's `TestClient` against the real database. `conftest.py` stubs out Gemini (`forge_graph` and `generate_design_image` in `app.routers.agent`) and provides a `make_user` fixture with `set_plan()` and `create_project()` helpers. Browser tests live in `e2e/`, a standalone npm package (Playwright) kept outside the pnpm workspace, because regenerating `pnpm-lock.yaml` re-resolves unrelated mobile deps. They need the web app and API already running against a schema-loaded database:
+```bash
+cd e2e && npm ci && npx playwright install chromium   # or set PLAYWRIGHT_CHROMIUM_EXECUTABLE to an existing Chromium
+npx playwright test                                   # E2E_BASE_URL / E2E_API_URL default to localhost:3000 / :8000
+npx playwright test tests/plans.spec.ts               # single file
+```
+
+CI (`.github/workflows/ci.yml`) has three jobs. `web` runs the typecheck and build. `api` runs pytest, then a uvicorn smoke test. `e2e` builds the web app, starts both servers, and runs Playwright.
 
 Env vars are documented in `.env.example`. The API refuses to start without `ENCRYPTION_MASTER_KEY`, and it fails on any token operation without `JWT_SECRET`. Both are deliberately left without defaults. `GEMINI_API_KEY` is only needed when an agent or image endpoint is actually called.
 

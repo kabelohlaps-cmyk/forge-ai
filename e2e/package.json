@@ -1,0 +1,11 @@
+{
+  "name": "forge-e2e",
+  "private": true,
+  "description": "Browser tests against a running web app + API. Kept outside the pnpm workspace so its deps don't touch pnpm-lock.yaml.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}

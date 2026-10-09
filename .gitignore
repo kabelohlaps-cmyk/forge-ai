@@ -9,3 +9,5 @@ dist/
 build/
 *.tsbuildinfo
 .pytest_cache/
+test-results/
+playwright-report/
