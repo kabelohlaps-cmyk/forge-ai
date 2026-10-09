@@ -94,3 +94,9 @@ def test_apple_token_with_at_hash_is_accepted(apple_key):
 def test_apple_token_with_wrong_claims_is_rejected(apple_key, bad):
     with pytest.raises(JWTError):
         asyncio.run(auth_service.verify_apple_id_token(apple_key(**bad)))
+
+
+def test_google_links_account_regardless_of_email_case(client, make_user, google_says):
+    user = make_user()
+    google_says(user.email.upper())
+    assert google_sign_in(client).json()["user"]["id"] == user.id

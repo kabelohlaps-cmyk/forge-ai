@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import AfterValidator, BaseModel, EmailStr
+from typing import Annotated
 
 from app.db import get_db
 from app.services.auth_service import (
@@ -13,14 +14,20 @@ from app.services.auth_service import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+# Emails are compared case-insensitively and stored lowercased, so
+# "Ana@x.com" and "ana@x.com" are one account. Queries use lower(email) so
+# rows saved before this normalization still match.
+Email = Annotated[EmailStr, AfterValidator(str.lower)]
+
+
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: Email
     password: str
     name: str = ""
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: Email
     password: str
 
 
@@ -36,7 +43,7 @@ def _user_public(row) -> dict:
 
 @router.post("/register")
 async def register(body: RegisterRequest, db=Depends(get_db)):
-    existing = await db.fetchrow("SELECT id FROM users WHERE email = $1", body.email)
+    existing = await db.fetchrow("SELECT id FROM users WHERE lower(email) = $1", body.email)
     if existing:
         raise HTTPException(409, "An account with this email already exists")
     if len(body.password) < 8:
@@ -54,7 +61,7 @@ async def register(body: RegisterRequest, db=Depends(get_db)):
 
 @router.post("/login")
 async def login(body: LoginRequest, db=Depends(get_db)):
-    row = await db.fetchrow("SELECT * FROM users WHERE email = $1", body.email)
+    row = await db.fetchrow("SELECT * FROM users WHERE lower(email) = $1", body.email)
     if not row or not row["password_hash"]:
         raise HTTPException(401, "Invalid email or password")
     if not verify_password(body.password, row["password_hash"]):
@@ -70,9 +77,10 @@ async def oauth_google(body: OAuthRequest, db=Depends(get_db)):
         info = verify_google_id_token(body.id_token)
     except Exception:
         raise HTTPException(401, "Invalid Google token")
+    info["email"] = info["email"].lower()
 
     if info["email_verified"]:
-        row = await db.fetchrow("SELECT * FROM users WHERE google_id = $1 OR email = $2", info["google_id"], info["email"])
+        row = await db.fetchrow("SELECT * FROM users WHERE google_id = $1 OR lower(email) = $2", info["google_id"], info["email"])
     else:
         # An unverified address proves nothing about who owns it, so never use
         # it to link into (or claim) an account -- only an existing Google link.
@@ -103,6 +111,8 @@ async def oauth_apple(body: OAuthRequest, db=Depends(get_db)):
         info = await verify_apple_id_token(body.id_token)
     except Exception:
         raise HTTPException(401, "Invalid Apple token")
+    if info.get("email"):
+        info["email"] = info["email"].lower()
 
     if not info.get("email"):
         # Apple only sends email on first authorization -- if a returning user
@@ -112,7 +122,7 @@ async def oauth_apple(body: OAuthRequest, db=Depends(get_db)):
             raise HTTPException(400, "Apple did not provide an email; cannot create account")
     else:
         row = await db.fetchrow(
-            "SELECT * FROM users WHERE apple_id = $1 OR email = $2", info["apple_id"], info["email"]
+            "SELECT * FROM users WHERE apple_id = $1 OR lower(email) = $2", info["apple_id"], info["email"]
         )
         if row:
             row = await db.fetchrow(

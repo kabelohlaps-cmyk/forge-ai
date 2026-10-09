@@ -6,6 +6,7 @@ CREATE TABLE design_versions(id SERIAL PRIMARY KEY,project_id INTEGER REFERENCES
 CREATE TABLE assets(id SERIAL PRIMARY KEY,version_id INTEGER REFERENCES design_versions(id),type TEXT NOT NULL,encrypted_url TEXT,salt TEXT,iv TEXT,size_bytes INTEGER,created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE design_memories(id SERIAL PRIMARY KEY,project_id INTEGER REFERENCES projects(id),content TEXT NOT NULL,embedding vector(1536),memory_type TEXT DEFAULT 'design',metadata JSONB DEFAULT '{}',created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE usage_events(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),feature TEXT NOT NULL,quantity INTEGER DEFAULT 1,metadata JSONB DEFAULT '{}',created_at TIMESTAMPTZ DEFAULT now());
+CREATE INDEX idx_users_email_lower ON users(lower(email));
 CREATE INDEX idx_sub_user ON subscriptions(user_id);
 CREATE INDEX idx_sub_status ON subscriptions(status);
 CREATE INDEX idx_projects_user ON projects(user_id);
