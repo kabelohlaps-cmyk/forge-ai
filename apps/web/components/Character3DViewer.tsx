@@ -6,8 +6,11 @@ import { OrbitControls, useGLTF, Environment, Grid, useAnimations } from '@react
 import { EffectComposer, Bloom, SMAA } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
-const MODEL_URL =
-  'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/CesiumMan/glTF-Binary/CesiumMan.glb';
+// Served from apps/web/public so the viewer doesn't depend on a third-party CDN.
+// CesiumMan (CC BY 4.0, Cesium) and potsdamer_platz_1k.hdr (CC0, Poly Haven)
+// -- see public/models/README.md and public/hdri/README.md.
+const MODEL_URL = '/models/CesiumMan.glb';
+const ENV_HDR_URL = '/hdri/potsdamer_platz_1k.hdr';
 
 const GOLD = '#e8c468';
 
@@ -470,7 +473,7 @@ export default function Character3DViewer() {
               selectedParts={selectedParts}
               onRigDetected={handleRigDetected}
             />
-            <Environment preset="city" />
+            <Environment files={ENV_HDR_URL} />
           </Suspense>
           <Grid
             infiniteGrid
