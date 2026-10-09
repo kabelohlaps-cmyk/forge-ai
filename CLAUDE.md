@@ -10,7 +10,6 @@ pnpm + Turborepo monorepo (pnpm 10, Node 20) with a separate Python API:
 - `apps/mobile` — Expo / expo-router app (`@forge/mobile`). Only reads mode metadata from `@forge/core`; it doesn't call the API yet.
 - `packages/core` — shared TS: `MODES`, `PLANS`/`PlanTier`, daily Bible verses. `packages/ui` — shared React components (EdenTree logo, VerseBalloon). `packages/crypto` — browser WebCrypto asset encryption (not currently imported anywhere). These packages ship raw `src/index.ts` with no build step; `next.config.js` `transpilePackages` compiles them.
 - `services/api` — FastAPI + asyncpg + LangGraph/Gemini backend. It's listed in the pnpm workspace but isn't a JS package.
-- Root-level `components/` is a stale partial copy of `apps/web/components` and `public/`. Nothing imports it, so edit the files under `apps/web` instead.
 
 ## Commands
 
