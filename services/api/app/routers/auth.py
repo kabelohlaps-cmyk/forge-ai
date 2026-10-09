@@ -71,7 +71,14 @@ async def oauth_google(body: OAuthRequest, db=Depends(get_db)):
     except Exception:
         raise HTTPException(401, "Invalid Google token")
 
-    row = await db.fetchrow("SELECT * FROM users WHERE google_id = $1 OR email = $2", info["google_id"], info["email"])
+    if info["email_verified"]:
+        row = await db.fetchrow("SELECT * FROM users WHERE google_id = $1 OR email = $2", info["google_id"], info["email"])
+    else:
+        # An unverified address proves nothing about who owns it, so never use
+        # it to link into (or claim) an account -- only an existing Google link.
+        row = await db.fetchrow("SELECT * FROM users WHERE google_id = $1", info["google_id"])
+        if not row:
+            raise HTTPException(400, "Your Google account's email address isn't verified")
     if row:
         row = await db.fetchrow(
             "UPDATE users SET google_id = $1, updated_at = now() WHERE id = $2 RETURNING *",

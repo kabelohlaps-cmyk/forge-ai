@@ -68,7 +68,12 @@ def verify_google_id_token(token: str) -> dict:
         raise RuntimeError("GOOGLE_CLIENT_ID is not set")
     info = google_id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
     # verify_oauth2_token already checks signature, issuer, audience, and expiry.
-    return {"email": info["email"], "name": info.get("name"), "google_id": info["sub"]}
+    return {
+        "email": info["email"],
+        "email_verified": info.get("email_verified") is True,
+        "name": info.get("name"),
+        "google_id": info["sub"],
+    }
 
 
 # ---------- Apple Sign In ----------
@@ -103,5 +108,9 @@ async def verify_apple_id_token(token: str) -> dict:
         algorithms=["RS256"],
         audience=APPLE_CLIENT_ID,
         issuer=APPLE_ISSUER,
+        # Apple id_tokens can carry at_hash, which jose can only check against
+        # the access token -- and we're only ever handed the id_token. The
+        # signature, audience, issuer and expiry checks above still apply.
+        options={"verify_at_hash": False},
     )
     return {"email": payload.get("email"), "apple_id": payload["sub"]}
