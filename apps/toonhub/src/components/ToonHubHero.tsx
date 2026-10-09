@@ -3,10 +3,10 @@ import type { CSSProperties, ReactNode } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 const IMAGES = [
-  { src: '/figurines/1-bear.svg', bg: '#F4845F', panel: '#F79B7F' },
-  { src: '/figurines/2-chick.svg', bg: '#6BBF7A', panel: '#85CC92' },
-  { src: '/figurines/3-bunny.svg', bg: '#E882B4', panel: '#ED9DC4' },
-  { src: '/figurines/4-cat.svg', bg: '#6EB5FF', panel: '#8DC4FF' },
+  { src: '/cards/1-angel.jpg', alt: 'Winged figure covered in glowing eyes', bg: '#1F130B', glow: '#FF8A2A' },
+  { src: '/cards/2-angel-wing.jpg', alt: 'Burning wing with glowing embers', bg: '#14191C', glow: '#FFB25C' },
+  { src: '/cards/3-dragon.jpg', alt: 'Dragon warrior wreathed in lightning', bg: '#17122A', glow: '#A88BFF' },
+  { src: '/cards/4-dragon-head.jpg', alt: 'Roaring storm dragon', bg: '#0F1424', glow: '#7FA7FF' },
 ];
 
 const DURATION = 650;
@@ -25,43 +25,39 @@ function getRoleStyle(role: Role, isMobile: boolean): CSSProperties {
   switch (role) {
     case 'center':
       return {
-        transform: `translateX(-50%) scale(${isMobile ? 1.25 : 1.68})`,
         filter: 'blur(0px)',
         opacity: 1,
         zIndex: 20,
         left: '50%',
-        height: isMobile ? '60%' : '92%',
-        bottom: isMobile ? '22%' : 0,
+        height: isMobile ? '52%' : '70%',
+        bottom: isMobile ? '26%' : '12%',
       };
     case 'left':
       return {
-        transform: 'translateX(-50%) scale(1)',
         filter: 'blur(2px)',
-        opacity: 0.85,
+        opacity: 0.7,
         zIndex: 10,
-        left: isMobile ? '20%' : '30%',
-        height: isMobile ? '16%' : '28%',
-        bottom: isMobile ? '32%' : '12%',
+        left: isMobile ? '14%' : '27%',
+        height: isMobile ? '26%' : '42%',
+        bottom: isMobile ? '34%' : '30%',
       };
     case 'right':
       return {
-        transform: 'translateX(-50%) scale(1)',
         filter: 'blur(2px)',
-        opacity: 0.85,
+        opacity: 0.7,
         zIndex: 10,
-        left: isMobile ? '80%' : '70%',
-        height: isMobile ? '16%' : '28%',
-        bottom: isMobile ? '32%' : '12%',
+        left: isMobile ? '86%' : '73%',
+        height: isMobile ? '26%' : '42%',
+        bottom: isMobile ? '34%' : '30%',
       };
     case 'back':
       return {
-        transform: 'translateX(-50%) scale(1)',
         filter: 'blur(4px)',
-        opacity: 1,
+        opacity: 0.45,
         zIndex: 5,
         left: '50%',
-        height: isMobile ? '13%' : '22%',
-        bottom: isMobile ? '32%' : '12%',
+        height: isMobile ? '20%' : '32%',
+        bottom: isMobile ? '40%' : '38%',
       };
   }
 }
@@ -148,6 +144,8 @@ export default function ToonHubHero() {
     `filter ${DURATION}ms ${EASING}`,
     `opacity ${DURATION}ms ${EASING}`,
     `left ${DURATION}ms ${EASING}`,
+    `height ${DURATION}ms ${EASING}`,
+    `bottom ${DURATION}ms ${EASING}`,
   ].join(', ');
 
   return (
@@ -183,7 +181,7 @@ export default function ToonHubHero() {
               fontSize: 'clamp(90px, 28vw, 380px)',
               fontWeight: 900,
               color: '#fff',
-              opacity: 1,
+              opacity: 0.08,
               lineHeight: 1,
               textTransform: 'uppercase',
               letterSpacing: '-0.02em',
@@ -204,30 +202,40 @@ export default function ToonHubHero() {
 
         {/* Carousel */}
         <div className="absolute inset-0" style={{ zIndex: 3 }}>
-          {IMAGES.map((image, i) => (
-            <div
-              key={image.src}
-              style={{
-                position: 'absolute',
-                aspectRatio: '0.6 / 1',
-                transition: itemTransition,
-                willChange: 'transform, filter, opacity',
-                ...getRoleStyle(roles[i], isMobile),
-              }}
-            >
-              <img
-                src={image.src}
-                alt=""
-                draggable={false}
+          {IMAGES.map((image, i) => {
+            const isCenter = roles[i] === 'center';
+            return (
+              <div
+                key={image.src}
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                  objectPosition: 'bottom center',
+                  position: 'absolute',
+                  aspectRatio: '0.6 / 1',
+                  transform: 'translateX(-50%)',
+                  borderRadius: isMobile ? 16 : 22,
+                  overflow: 'hidden',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  boxShadow: isCenter
+                    ? `0 30px 80px rgba(0,0,0,0.6), 0 0 90px ${image.glow}55`
+                    : '0 20px 50px rgba(0,0,0,0.5)',
+                  transition: `${itemTransition}, box-shadow ${DURATION}ms ${EASING}`,
+                  willChange: 'transform, filter, opacity',
+                  ...getRoleStyle(roles[i], isMobile),
                 }}
-              />
-            </div>
-          ))}
+              >
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  draggable={false}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                  }}
+                />
+              </div>
+            );
+          })}
         </div>
 
         {/* Bottom-left text + nav */}
