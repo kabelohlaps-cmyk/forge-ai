@@ -26,6 +26,8 @@ function ProjectsPageInner() {
   const [showForm, setShowForm] = useState(!!presetMode);
   const [title, setTitle] = useState('');
   const [mode, setMode] = useState(presetMode || MODES[0].id);
+  // Modes the user's plan includes; null until /users/me loads.
+  const [allowedModes, setAllowedModes] = useState<string[] | null>(null);
   const [brief, setBrief] = useState('');
   const [creating, setCreating] = useState(false);
 
@@ -37,7 +39,17 @@ function ProjectsPageInner() {
       .then(setProjects)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+    apiFetch('/users/me', backendToken)
+      .then((me) => {
+        setAllowedModes(me.allowed_modes);
+        // Don't preselect a mode the plan doesn't include.
+        setMode((m) => (me.allowed_modes.includes(m) ? m : me.allowed_modes[0] ?? m));
+      })
+      .catch(() => setAllowedModes(null));
   }, [status, backendToken]);
+
+  const isLocked = (modeId: string) => allowedModes !== null && !allowedModes.includes(modeId);
+  const presetLocked = !!presetMode && isLocked(presetMode);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -81,9 +93,19 @@ function ProjectsPageInner() {
             className="w-full rounded-lg border border-eden-sage/20 bg-eden-deep/60 px-4 py-2 text-eden-cream focus:outline-none focus:border-eden-gold/50"
           >
             {MODES.map((m) => (
-              <option key={m.id} value={m.id}>{m.icon} {m.label}</option>
+              <option key={m.id} value={m.id} disabled={isLocked(m.id)}>
+                {m.icon} {m.label}{isLocked(m.id) ? ` — ${m.tier} plan` : ''}
+              </option>
             ))}
           </select>
+          {allowedModes && MODES.some((m) => isLocked(m.id)) && (
+            <p className="text-xs text-eden-stone">
+              {presetLocked
+                ? `${MODES.find((m) => m.id === presetMode)?.label ?? presetMode} isn't included in your plan. `
+                : 'Some modes need a higher plan. '}
+              <a href="/billing" className="text-eden-gold-light hover:underline">See plans</a>
+            </p>
+          )}
           <textarea
             placeholder="What are you building? (optional brief)"
             value={brief}
