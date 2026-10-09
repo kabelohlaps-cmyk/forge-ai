@@ -197,7 +197,7 @@ export default function ToonHubHero() {
           className="absolute top-6 left-4 sm:left-8 text-xs font-semibold uppercase text-white"
           style={{ zIndex: 60, opacity: 0.9, letterSpacing: '0.18em' }}
         >
-          TOONHUB
+          STORM
         </div>
 
         {/* Carousel */}
@@ -247,7 +247,7 @@ export default function ToonHubHero() {
             className="font-bold uppercase tracking-widest mb-2 sm:mb-3 text-base sm:text-[22px] text-white"
             style={{ opacity: 0.95, letterSpacing: '0.02em' }}
           >
-            TOONHUB FIGURINES
+            STORM
           </p>
           <p
             className="hidden sm:block text-xs sm:text-sm text-white mb-4 sm:mb-5"
