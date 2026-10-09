@@ -3,10 +3,10 @@ import type { CSSProperties, ReactNode } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 const IMAGES = [
-  { src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/1.02464a56.png', bg: '#F4845F', panel: '#F79B7F' },
-  { src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/2.b977faab.png', bg: '#6BBF7A', panel: '#85CC92' },
-  { src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/3.4df853b4.png', bg: '#E882B4', panel: '#ED9DC4' },
-  { src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/4.4457fbce.png', bg: '#6EB5FF', panel: '#8DC4FF' },
+  { src: '/figurines/1-bear.svg', bg: '#F4845F', panel: '#F79B7F' },
+  { src: '/figurines/2-chick.svg', bg: '#6BBF7A', panel: '#85CC92' },
+  { src: '/figurines/3-bunny.svg', bg: '#E882B4', panel: '#ED9DC4' },
+  { src: '/figurines/4-cat.svg', bg: '#6EB5FF', panel: '#8DC4FF' },
 ];
 
 const DURATION = 650;
