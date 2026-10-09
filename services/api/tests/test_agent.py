@@ -97,6 +97,7 @@ def test_render_quota_is_enforced_and_counted(make_user, fake_ai):
     assert "renders" in r.json()["detail"]
     assert len(renders) == 2
     assert run_sql("SELECT count(*) FROM usage_events WHERE feature='render'")[0][0] == 2
+    assert user.get("/users/me").json()["renders_used"] == 2
 
 
 def test_last_months_renders_dont_count(make_user, fake_ai):

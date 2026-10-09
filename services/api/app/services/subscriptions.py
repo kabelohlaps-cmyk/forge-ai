@@ -38,6 +38,20 @@ async def has_paid_access(db, user_id: int) -> bool:
     )
 
 
+async def paid_access_ends_at(db, user_id: int):
+    """When a cancelled plan's paid month runs out, or None if it isn't ending
+    (an ACTIVE subscription, or nothing cancelled that's still running)."""
+    if await db.fetchval(
+        "SELECT EXISTS (SELECT 1 FROM subscriptions WHERE user_id=$1 AND status='ACTIVE')", user_id
+    ):
+        return None
+    return await db.fetchval(
+        "SELECT max(COALESCE(next_billing_at, date_trunc('month', cancelled_at) + interval '1 month')) "
+        f"FROM subscriptions WHERE user_id=$1 AND status='CANCELLED' AND ({_GIVES_ACCESS})",
+        user_id,
+    )
+
+
 async def downgrade_if_lapsed(db, user_id: int) -> bool:
     lapsed = await db.fetchval(
         "SELECT EXISTS (SELECT 1 FROM subscriptions WHERE user_id=$1 "

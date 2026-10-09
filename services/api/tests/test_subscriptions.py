@@ -98,3 +98,20 @@ def test_plan_set_without_any_subscription_is_left_alone(make_user):
     user = make_user()
     user.set_plan("studio", ["vehicle"], -1)
     assert tier(user) == "studio"
+
+
+def test_me_reports_when_a_cancelled_plan_ends(client, subscriber):
+    assert subscriber.get("/users/me").json()["plan_ends_at"] is None
+    set_sub("next_billing_at = '2099-01-31T00:00:00Z'")
+    webhook(client, "BILLING.SUBSCRIPTION.CANCELLED", id="I-SUB1")
+    assert subscriber.get("/users/me").json()["plan_ends_at"].startswith("2099-01-31")
+
+
+def test_me_has_no_end_date_while_another_subscription_is_active(client, subscriber):
+    run_sql(
+        "INSERT INTO subscriptions (user_id, paypal_sub_id, tier, status) VALUES ($1, 'I-SUB2', 'creator', 'ACTIVE')",
+        subscriber.id,
+    )
+    set_sub("next_billing_at = now() + interval '5 days'")
+    webhook(client, "BILLING.SUBSCRIPTION.CANCELLED", id="I-SUB1")
+    assert subscriber.get("/users/me").json()["plan_ends_at"] is None
