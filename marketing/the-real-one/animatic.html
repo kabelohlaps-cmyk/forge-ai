@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FORGE Ad Animatic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --stage:#060807; --gold:#D4A64B; --gold-hi:#F0D48A; --gold-lo:#8A6524;
@@ -90,7 +90,10 @@
   #logo{left:0;right:0;top:50%;margin-top:-90px;display:flex;align-items:center;justify-content:center;gap:28px;transform:scale(.9);opacity:0}
   #logo.on{transform:none;opacity:1}
   #logo .word{font-size:132px;font-weight:700;letter-spacing:.08em;color:var(--cream)}
-  #tag{left:0;right:0;top:calc(50% + 110px);text-align:center;font-size:36px;color:var(--rest);opacity:0}
+  #tag{left:0;right:0;top:calc(50% + 120px);text-align:center;opacity:0;transition:opacity 1.2s ease}
+  #tag .vs{font:italic 400 58px 'Cormorant Garamond',Georgia,serif;color:var(--gold-hi)}
+  #tag .rf{margin-top:18px;font-size:22px;letter-spacing:.28em;color:var(--rest)}
+  .v #tag .vs{font-size:62px;padding:0 80px}
   #tag.on{opacity:1}
   .v #logo{top:40%}
   .v #tag{top:calc(40% + 110px)}
@@ -132,7 +135,7 @@
     </svg>
     <div class="word">FORGE</div>
   </div>
-  <div id="tag" class="layer">design in Eden</div>
+  <div id="tag" class="layer"><div class="vs">“Establish the work of our hands.”</div><div class="rf">PSALM 90:17</div></div>
 
   <div id="cap" class="layer"></div>
 </div></div></div>
@@ -167,7 +170,8 @@ const CAPS = [
   [21.40, 22.60, 'Turn it in <b>3D</b>.',                  'Turn it in 3D…'],
   [22.60, 24.30, '<b class="a">One studio.</b>',           'One studio.'],
   [24.40, 26.40, 'Fewer apps. <b>More making.</b>',        'Fewer apps. More making.'],
-  [26.53, END,   '',                                       'Forge.'],
+  [26.53, 26.90, '',                                       'Forge.'],
+  [26.90, END,   '',                                       '(on screen) “Establish the work of our hands.” — Psalm 90:17'],
 ];
 // Hours counter keyframes [t, value].
 const COUNT = [[0,0],[2.5,0],[3.4,40],[5.6,40],[6.6,11],[7.3,11],[7.7,40],[8.0,40],[8.5,31],[10.0,31],[10.5,22.5],[12.1,22.5],[12.5,16.5],[14.9,16.5],[15.3,11],[END,11]];

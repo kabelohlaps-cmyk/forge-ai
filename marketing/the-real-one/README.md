@@ -56,10 +56,13 @@ replaced by the real word timings in Step 05.
 | 10 | 18.90 | Sketch it. Render it. Turn it in 3D… **One studio.** |
 | 11 | 24.40 | Fewer apps. More making. |
 | 12 | 26.53 | Forge. |
+| — | 26.90 | *On screen only, not spoken:* "Establish the work of our hands." — Psalm 90:17 |
 
 The hook (line 1, under 2 s) accuses something the viewer trusts. There's one
 line per cost, verb-led ("References ate…"), with the numbers written as spoken
-words. Line 11 is the 4-word payoff, then the name alone.
+words. Line 11 is the 4-word payoff, then the name alone. The verse sits silently on
+the end card under the logo, so it closes the ad without crowding the voice or
+pushing it past 30 s.
 
 ---
 
@@ -91,7 +94,8 @@ References 22.5 % · Redraws 21.25 % · Renders 15 % · App-switching 13.75 %.
 | 17.40 | "Forge" (17.85) | Windows collapse into centre → FORGE lockup | Logo on the bar 8 downbeat (hero hit 2) |
 | 18.90 | "Sketch / Render / 3D / One studio" | Three words light in turn, then **One studio.** in gold | Slices fly back and **re-forge** into one whole glowing bar |
 | 24.40 | "making" | *Fewer apps.* **More making.** | Bar cools to a steady glow |
-| 26.53 | "Forge." | End card: FORGE lockup + *design in Eden* | Bar fades; last chord rings under the card to 29.0 |
+| 26.53 | "Forge." | End card: FORGE lockup | Bar fades; last chord rings under the card to 29.5 |
+| 26.90 | — | Verse fades in under the lockup: *"Establish the work of our hands."* · PSALM 90:17 | Stillness; nothing moves while it's read |
 
 **9:16 re-layout (don't crop):** caption sits at 20–30 % of the height. The
 ingot is centred at ~45 %. Cost cards stack under the ingot as a 2×2 grid, kept
@@ -111,18 +115,19 @@ card lockup is centred at 40 %.
 | The rest | cream at 60–70 % | Everything that isn't the key word |
 
 **Type:** Inter only, in 3 weights: 400 for the rest of a line, 600 for the key
-word, 700 for numbers. The FORGE wordmark/tree lockup is the one exception,
-because it's the logo.
+word, 700 for numbers. There are two exceptions: the FORGE wordmark/tree
+lockup (it's the logo), and the end-card verse, which is set in Cormorant
+Garamond italic in `eden-gold-light` `#F0D48A`, as it is in the app. The
+reference goes underneath in small Inter caps at the "rest" grey.
 
 **Never-list:** no mascots or faces on the 8 personas (no emoji icons either),
-no serif in captions (Cormorant stays inside the logo), no glitch or
+no serif in captions (Cormorant is reserved for the end-card verse), no glitch or
 "AI sparkle" effects, no second accent colour, no stock UI screenshots before
-second 17, no verse text in the ad (it can live on the landing page the ad
-links to), no gradients on text.
+second 17, no more than one verse (and only on the end card), no gradients on
+text.
 
-> The app's current UI is serif-heavy (Cormorant Garamond). The guide's
-> "no serif" rule is about the ad, not the product. If you'd rather keep
-> the serif for brand consistency, use it **only** on line 12 and the end card.
+> The guide's "no serif" rule is about the captions. Letting the verse alone
+> carry the app's serif makes the close feel like FORGE without breaking it.
 
 ---
 
@@ -146,9 +151,18 @@ Forge.
 - Respelling: "Forge" is unambiguous. If you say the full name, write it "Forge A I"
   (not "Forge AI", which some voices read as "Forge-eye"). "3D" → "three D".
 - Max 2 long pauses: after "designed…" (~0.39 s) and after "app-switching?" (~0.35 s).
-- **Direction:** *[female or male]*, *[accent]*, confident, warm, slightly fast;
-  sure of the numbers, never salesy. *(Pick the voice. The guide's example uses a
-  US female voice.)*
+- **Direction:** male, deep and soothing, with an African English accent.
+  Calm, unhurried authority: a storyteller at dusk, not a hype announcer. Warm
+  low register, with the numbers spoken slowly and with certainty. Let
+  "eleven" and "Forge" land softly; let the weight do the work instead of volume.
+- **Accent:** "African" covers a lot of voices. In your TTS library, pick a
+  specific one (e.g. South African, Nigerian, Kenyan, Ghanaian) and stay with it
+  across both takes, so the vowels on the numbers stay consistent.
+- **Pace check:** a soothing read runs slower than the guide's "slightly fast"
+  reference. If the take runs past ~27.5 s, don't speed it up. Cut line 8
+  ("Six tools open.") first, then shorten line 10 to "Sketch. Render. 3D. One studio."
+- **Mix note:** a deep voice sits on top of the music's low end. Keep the pad and
+  sub under the voice, and high-pass the music at ~120 Hz while he speaks.
 - Generate 2 takes. Keep the one that sounds most certain on "eleven".
 - Run it through a word-timestamp transcriber. Replace every time in Steps 02/03
   with the real ones, trim gaps to 0.33–0.45 s, and never time-stretch the voice.
@@ -206,5 +220,6 @@ That makes 2 hero hits in total.
 - [ ] 9:16 safe zones: titles at 20–30 % of the height, nothing in the bottom 18 %
 - [ ] Masters: 1920×1080 and 1080×1920, 60 fps, H.264 ~20 Mb/s, 48 kHz stereo
 - [ ] Hand-off: voice / music / SFX stems + an edit with every sound on its own clip and markers on every hit
-- [ ] Sign it: 2-second end card (FORGE lockup + *design in Eden*), last chord ringing under it
+- [ ] Sign it: end card (FORGE lockup + Psalm 90:17), last chord ringing under it
+- [ ] Verse checked word-for-word against the translation the app uses (NIV wording)
 - [ ] Hours in Step 01 replaced with real data
