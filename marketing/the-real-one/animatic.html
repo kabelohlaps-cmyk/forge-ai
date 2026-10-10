@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FORGE Ad Animatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stage:#060807; --gold:#D4A64B; --gold-hi:#F0D48A; --gold-lo:#8A6524;
+    --leaf:#3E7B47; --cream:#F5EFE0; --rest:rgba(245,239,224,.62);
+    --chrome:#0d0f0e; --line:rgba(245,239,224,.12);
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%;background:var(--chrome);color:var(--cream);font-family:Inter,system-ui,sans-serif}
+  body{display:flex;flex-direction:column}
+  #viewport{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:16px;min-height:0}
+  #frame{position:relative;flex:none}
+  #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;background:var(--stage);overflow:hidden;border-radius:6px}
+  #stage.v{width:1080px;height:1920px}
+
+  /* ---------- controls ---------- */
+  #controls{display:flex;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+  #controls button{background:none;border:1px solid var(--line);color:var(--cream);border-radius:999px;padding:6px 14px;font:500 13px Inter,sans-serif;cursor:pointer}
+  #controls button:hover{border-color:var(--gold)}
+  #scrub{flex:1;min-width:140px;accent-color:var(--gold)}
+  #time{font:500 13px ui-monospace,monospace;color:var(--rest);min-width:110px}
+  #line{width:100%;font-size:13px;color:var(--rest);min-height:1.3em}
+
+  /* ---------- stage layers ---------- */
+  .layer{position:absolute;transition:opacity .45s ease,transform .6s cubic-bezier(.2,.8,.2,1),filter .45s ease}
+  .hide{opacity:0!important}
+  #glow{inset:0;background:radial-gradient(ellipse 55% 55% at 50% 55%,rgba(212,166,75,.30),rgba(212,166,75,.06) 55%,transparent 75%)}
+  #glow.molten{background:radial-gradient(ellipse 55% 55% at 50% 55%,rgba(212,166,75,.42),rgba(62,123,71,.22) 55%,transparent 78%)}
+
+  #cap{left:0;right:0;top:150px;text-align:center;font-size:92px;font-weight:400;letter-spacing:-.03em;color:var(--rest)}
+  .v #cap{top:430px;font-size:84px;padding:0 60px}
+  #cap b{font-weight:600;color:var(--cream)}
+  #cap b.a{color:var(--gold);font-weight:700}
+
+  /* calendar card behind the hook */
+  #cal{left:50%;top:50%;width:720px;height:420px;margin:-210px 0 0 -360px;border-radius:28px;background:rgba(245,239,224,.05);border:1px solid var(--line);filter:blur(6px);display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:28px}
+  #cal i{border-radius:10px;background:rgba(212,166,75,.16)}
+  #cal i:nth-child(3n){background:rgba(245,239,224,.08)}
+  #cal.shatter{opacity:0;transform:scale(1.25);filter:blur(24px)}
+
+  /* the ingot */
+  #ingot{left:50%;top:560px;width:640px;margin-left:-320px;transform:perspective(1100px) rotateX(22deg) scale(.35) translateY(260px);opacity:0;filter:blur(18px)}
+  .v #ingot{top:820px;width:780px;margin-left:-390px}
+  #ingot.in{transform:perspective(1100px) rotateX(22deg);opacity:1;filter:none}
+  #ingot.dim{opacity:.18}
+  #bar{display:flex;height:150px;transform-origin:left center;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+  #ingot.deflate #bar{transform:scaleX(.275)}
+  .seg{height:100%;background:linear-gradient(180deg,var(--gold-hi) 0%,var(--gold) 45%,var(--gold-lo) 100%);
+       box-shadow:inset 0 2px 0 rgba(255,255,255,.35);transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .9s ease,filter .6s ease}
+  .seg:first-child{border-radius:16px 0 0 16px}
+  .seg:last-child{border-radius:0 16px 16px 0}
+  .seg.cut{transform:translate(var(--dx),var(--dy)) rotate(8deg) scale(.85);opacity:0;filter:brightness(1.6) blur(2px)}
+  #stage{--dx:260px;--dy:-120px}
+  #stage.v{--dx:0px;--dy:260px}
+  #ingot.molten .seg{filter:brightness(1.18)}
+  #ingot.molten #bar{box-shadow:0 0 90px rgba(240,212,138,.55),0 0 160px rgba(62,123,71,.45);border-radius:16px}
+  #beam{position:absolute;top:-60px;bottom:-60px;width:4px;background:linear-gradient(transparent,#fff,transparent);box-shadow:0 0 24px 6px rgba(240,212,138,.8);opacity:0;transition:opacity .15s}
+  #beam.on{opacity:1}
+
+  #count{left:0;right:0;top:770px;text-align:center}
+  .v #count{top:1030px}
+  #count .n{font-size:120px;font-weight:700;color:var(--gold);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  #count .l{font-size:30px;color:var(--rest);margin-top:-8px}
+
+  /* cost cards */
+  #cards{right:110px;top:250px;width:420px;display:flex;flex-direction:column;gap:18px}
+  .v #cards{right:auto;left:90px;top:1250px;width:900px;display:grid;grid-template-columns:1fr 1fr}
+  .card{display:flex;gap:16px;align-items:center;padding:20px 24px;border-radius:20px;background:rgba(20,22,21,.85);border:1px solid var(--line);
+        opacity:0;transform:translateX(30px);transition:opacity .4s ease,transform .5s cubic-bezier(.2,.8,.2,1)}
+  .card.on{opacity:1;transform:none}
+  .card .ic{width:44px;height:44px;border-radius:50%;background:rgba(212,166,75,.12);display:grid;place-items:center;font-size:20px;color:var(--gold)}
+  .card .k{font-size:22px;color:var(--rest)}
+  .card .x{font-size:36px;font-weight:700;color:var(--gold)}
+
+  /* app windows */
+  .win{width:300px;height:190px;border-radius:18px;background:rgba(245,239,224,.06);border:1px solid var(--line);padding:16px 20px;font-size:22px;color:var(--rest);
+       filter:blur(1.5px);opacity:0;transform:scale(.9);transition:all .55s cubic-bezier(.2,.8,.2,1)}
+  .win::before{content:"";display:block;width:54px;height:10px;border-radius:5px;background:rgba(212,166,75,.35);margin-bottom:14px}
+  .win.on{opacity:1;transform:none}
+  .win.gone{opacity:0;left:calc(50% - 150px)!important;top:calc(50% - 95px)!important;transform:scale(.15)}
+
+  /* logo + end card */
+  #logo{left:0;right:0;top:50%;margin-top:-90px;display:flex;align-items:center;justify-content:center;gap:28px;transform:scale(.9);opacity:0}
+  #logo.on{transform:none;opacity:1}
+  #logo .word{font-size:132px;font-weight:700;letter-spacing:.08em;color:var(--cream)}
+  #tag{left:0;right:0;top:calc(50% + 110px);text-align:center;font-size:36px;color:var(--rest);opacity:0}
+  #tag.on{opacity:1}
+  .v #logo{top:40%}
+  .v #tag{top:calc(40% + 110px)}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="frame"><div id="stage">
+  <div id="glow" class="layer hide"></div>
+  <div id="cal" class="layer hide"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+  <div id="ingot" class="layer">
+    <div id="bar">
+      <div class="seg" style="width:27.5%"></div>
+      <div class="seg" data-cut="3" style="width:13.75%"></div>
+      <div class="seg" data-cut="2" style="width:15%"></div>
+      <div class="seg" data-cut="1" style="width:21.25%"></div>
+      <div class="seg" data-cut="0" style="width:22.5%"></div>
+    </div>
+    <div id="beam"></div>
+  </div>
+  <div id="count" class="layer hide"><div class="n">0h</div><div class="l">blocked for design</div></div>
+
+  <div id="cards" class="layer">
+    <div class="card"><div class="ic">◫</div><div><div class="k">References</div><div class="x">−9h</div></div></div>
+    <div class="card"><div class="ic">✎</div><div><div class="k">Redraws</div><div class="x">−8.5h</div></div></div>
+    <div class="card"><div class="ic">◌</div><div><div class="k">Renders</div><div class="x">−6h</div></div></div>
+    <div class="card"><div class="ic">⧉</div><div><div class="k">App-switching</div><div class="x">−5.5h</div></div></div>
+  </div>
+
+  <div id="wins"></div>
+
+  <div id="logo" class="layer">
+    <svg width="150" height="150" viewBox="0 0 64 64" fill="none" aria-label="FORGE AI">
+      <path d="M22 50 C 16 50, 12 44, 14 38 M42 50 C 48 50, 52 44, 50 38" stroke="#D4A64B" stroke-width="2" stroke-linecap="round"/>
+      <path d="M32 52 C 31 44, 30 38, 30 32 C 30 29, 31 26, 32 23 C 33 26, 34 29, 34 32 C 34 38, 33 44, 32 52 Z" fill="#D4A64B"/>
+      <ellipse cx="32" cy="20" rx="17" ry="12" fill="#3E7B47"/>
+      <ellipse cx="20" cy="25" rx="9" ry="7" fill="#4F8B57"/>
+      <ellipse cx="44" cy="25" rx="9" ry="7" fill="#4F8B57"/>
+    </svg>
+    <div class="word">FORGE</div>
+  </div>
+  <div id="tag" class="layer">design in Eden</div>
+
+  <div id="cap" class="layer"></div>
+</div></div></div>
+
+<div id="controls">
+  <button id="play">Pause</button>
+  <button id="restart">Restart</button>
+  <button id="aspect">Switch to 9:16</button>
+  <input id="scrub" type="range" min="0" max="29.5" step="0.01" value="0">
+  <span id="time">0.00 s</span>
+  <div id="line"></div>
+</div>
+
+<script>
+const END = 29.5;
+const $ = id => document.getElementById(id);
+const stage = $('stage'), frame = $('frame');
+
+// Scratch timings from the production pack (Step 02 / 03).
+const CAPS = [
+  [0.35, 2.20, 'Your calendar is <b>lying</b>',            'Your calendar is lying to you.'],
+  [2.30, 5.00, 'It says <b class="a">40 hours</b>',        'It says forty hours of design this week.'],
+  [5.10, 7.80, 'You <b>actually</b> designed',             'You actually designed… eleven.'],
+  [7.90, 9.80, 'References <b>ate</b>',                    'References ate nine.'],
+  [9.90, 11.90, 'Redraws <b>took</b>',                     'Redraws took eight and a half.'],
+  [12.00, 13.50, 'Renders <b>burned</b>',                  'Renders burned six.'],
+  [13.55, 15.90, 'And <b>app-switching?</b>',              'And app-switching?… Five and a half.'],
+  [16.00, 17.30, '<b class="a">6 tools</b> open.',         'Six tools open.'],
+  [17.40, 17.85, 'Meet',                                   'Meet Forge.'],
+  [18.90, 20.20, '<b>Sketch</b> it.',                      'Sketch it.'],
+  [20.20, 21.40, '<b>Render</b> it.',                      'Render it.'],
+  [21.40, 22.60, 'Turn it in <b>3D</b>.',                  'Turn it in 3D…'],
+  [22.60, 24.30, '<b class="a">One studio.</b>',           'One studio.'],
+  [24.40, 26.40, 'Fewer apps. <b>More making.</b>',        'Fewer apps. More making.'],
+  [26.53, END,   '',                                       'Forge.'],
+];
+// Hours counter keyframes [t, value].
+const COUNT = [[0,0],[2.5,0],[3.4,40],[5.6,40],[6.6,11],[7.3,11],[7.7,40],[8.0,40],[8.5,31],[10.0,31],[10.5,22.5],[12.1,22.5],[12.5,16.5],[14.9,16.5],[15.3,11],[END,11]];
+const CUTS = [8.0, 10.0, 12.1, 14.9];   // slice times, in cut order
+const REFORGE = 19.4;                  // slices start flying back
+
+const WINS = ['Moodboard','Sketchbook','Render queue','3D viewer','Spec doc','Chat'];
+const WPOS = {h:[[180,300],[1420,280],[120,720],[1480,760],[560,840],[1540,520]], v:[[90,170],[690,600],[60,1150],[720,1080],[140,1360],[650,1340]]};
+WINS.forEach(n => { const d = document.createElement('div'); d.className = 'win layer'; d.textContent = n; $('wins').appendChild(d); });
+
+function interp(keys, t){
+  for (let i = 1; i < keys.length; i++) {
+    const [t0,v0] = keys[i-1], [t1,v1] = keys[i];
+    if (t <= t1) return v0 + (v1 - v0) * Math.min(1, Math.max(0, (t - t0) / (t1 - t0)));
+  }
+  return keys[keys.length-1][1];
+}
+const between = (t,a,b) => t >= a && t < b;
+const toggle = (el, cls, on) => el.classList.toggle(cls, !!on);
+
+let lastCap = -1;
+function render(t){
+  const vert = stage.classList.contains('v');
+  toggle($('glow'), 'hide', t < 0.05);
+  toggle($('glow'), 'molten', between(t, 19.5, 26.4));
+
+  // hook: calendar card, shatters on "lying"
+  toggle($('cal'), 'hide', !between(t, 0.25, 2.3));
+  toggle($('cal'), 'shatter', t >= 1.08);
+
+  // caption
+  const ci = CAPS.findIndex(c => between(t, c[0], c[1]));
+  if (ci !== lastCap) { $('cap').innerHTML = ci < 0 ? '' : CAPS[ci][2]; $('line').textContent = ci < 0 ? '' : 'VO: ' + CAPS[ci][3]; lastCap = ci; }
+
+  // ingot
+  const ing = $('ingot');
+  toggle(ing, 'in', between(t, 2.4, 17.4) || between(t, 18.9, 26.4));
+  toggle(ing, 'dim', between(t, 16.0, 17.4));
+  toggle(ing, 'deflate', between(t, 5.6, 7.5));
+  toggle(ing, 'molten', between(t, 19.5, 26.4));
+  document.querySelectorAll('.seg[data-cut]').forEach(s => {
+    const k = +s.dataset.cut;
+    toggle(s, 'cut', between(t, CUTS[k], REFORGE + k * 0.45));
+  });
+  const beamAt = CUTS.findIndex(c => between(t, c - 0.15, c + 0.05));
+  toggle($('beam'), 'on', beamAt >= 0);
+  if (beamAt >= 0) { const segs = [...document.querySelectorAll('.seg')]; const x = segs.slice(0, 4 - beamAt).reduce((a, s) => a + s.offsetWidth, 0); $('beam').style.left = (x - 2) + 'px'; }
+
+  // counter
+  toggle($('count'), 'hide', !between(t, 2.4, 16.0));
+  const v = Math.round(interp(COUNT, t) * 2) / 2;
+  $('count').querySelector('.n').textContent = (v % 1 ? v.toFixed(1) : v) + 'h';
+  $('count').querySelector('.l').textContent = t < 5.1 ? 'blocked for design' : 'actually designing';
+
+  // cost cards
+  document.querySelectorAll('.card').forEach((c, k) => toggle(c, 'on', between(t, CUTS[k] + 0.35, 16.0)));
+
+  // app windows: drift in, collapse into the logo on "Forge"
+  const pos = WPOS[vert ? 'v' : 'h'];
+  document.querySelectorAll('.win').forEach((w, k) => {
+    if (!w.classList.contains('gone')) { w.style.left = pos[k][0] + 'px'; w.style.top = pos[k][1] + 'px'; }
+    toggle(w, 'on', between(t, 16.0 + k * 0.12, 17.85));
+    toggle(w, 'gone', between(t, 17.85, 18.9));
+  });
+
+  // logo on bar 8, end card on bar 12
+  toggle($('logo'), 'on', between(t, 17.85, 18.9) || t >= 26.53);
+  toggle($('tag'), 'on', t >= 26.9);
+
+  $('scrub').value = t;
+  $('time').textContent = t.toFixed(2) + ' s';
+}
+
+// playback
+let playing = true, t0 = performance.now(), held = 0;
+const now = () => playing ? Math.min(END, (performance.now() - t0) / 1000) : held;
+function tick(){ const t = now(); render(t); if (playing && t >= END) setPlaying(false); requestAnimationFrame(tick); }
+function setPlaying(p){
+  if (p && held >= END) held = 0;
+  if (p) t0 = performance.now() - held * 1000; else held = now();
+  playing = p; $('play').textContent = p ? 'Pause' : 'Play';
+}
+$('play').onclick = () => setPlaying(!playing);
+$('restart').onclick = () => { held = 0; t0 = performance.now(); setPlaying(true); };
+$('scrub').oninput = e => { held = +e.target.value; t0 = performance.now() - held * 1000; };
+$('aspect').onclick = () => {
+  stage.classList.toggle('v');
+  $('aspect').textContent = stage.classList.contains('v') ? 'Switch to 16:9' : 'Switch to 9:16';
+  fit();
+};
+
+function fit(){
+  const W = stage.offsetWidth, H = stage.offsetHeight, vp = $('viewport');
+  const s = Math.min((vp.clientWidth - 32) / W, (vp.clientHeight - 32) / H);
+  stage.style.transform = `scale(${s})`;
+  frame.style.width = W * s + 'px'; frame.style.height = H * s + 'px';
+}
+addEventListener('resize', fit);
+fit(); requestAnimationFrame(tick);
+</script>
+</body>
+</html>
