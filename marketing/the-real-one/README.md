@@ -47,18 +47,18 @@ replaced by the real word timings in Step 05.
 | 1 | 0.35 | Your calendar is lying to you. |
 | 2 | 2.30 | It says forty hours of design this week. |
 | 3 | 5.10 | You actually designed… **eleven.** |
-| 4 | 7.90 | References ate nine. |
+| 4 | 7.90 | References cost nine. |
 | 5 | 9.90 | Redraws took eight and a half. |
 | 6 | 12.00 | Renders burned six. |
 | 7 | 13.55 | And app-switching?… Five and a half. |
 | 8 | 16.00 | Meet Forge. *("Forge" lands at 16.45)* |
 | 9 | 17.50 | Sketch it. Render it. Turn it in 3D… **One studio.** |
-| 10 | 23.30 | Fewer apps. More making. |
+| 10 | 23.30 | Fewer tools. More making. |
 | 11 | 25.56 | Forge. |
 | 12 | 26.43 | *(softer, slower)* Establish the work of our hands. *(Psalm 90:17, the reference is on screen only)* |
 
 The hook (line 1, under 2 s) accuses something the viewer trusts. There's one
-line per cost, verb-led ("References ate…"), with the numbers written as spoken
+line per cost, verb-led ("References cost…"), with the numbers written as spoken
 words. Line 10 is the 4-word payoff, then the name alone. Then he speaks the verse as
 a quiet benediction over the end card.
 
@@ -87,13 +87,13 @@ References 22.5 % · Redraws 21.25 % · Renders 15 % · App-switching 13.75 %.
 | 0.35 | "lying" (1.08) | *Your calendar is* **lying** · blurred week-calendar card behind | Calendar card **shatters** on "lying" (hero hit 1) |
 | 2.30 | "forty hours" | *It says* **40 hours** | Ingot arrives from depth; counter rolls 0 → 40 h |
 | 5.10 | "eleven" (6.60) | *You* **actually** *designed* | Bar deflates to 27.5 % width; counter to 11 h; hold; rewind to 40 h |
-| 7.90 | "References" | *References* **ate** | Right 22.5 % slice cuts off and drifts to card *References −9 h*; counter 31 h |
+| 7.90 | "References" | *References* **cost** | Right 22.5 % slice cuts off and drifts to card *References −9 h*; counter 31 h |
 | 9.90 | "Redraws" | *Redraws* **took** | Next slice → card *Redraws −8.5 h*; 22.5 h |
 | 12.00 | "Renders" | *Renders* **burned** | Slice → *Renders −6 h*; 16.5 h |
 | 13.55 | "Five and a half" (14.90) | *And* **app-switching?** | Pause 0.35 s; slice → *Switching −5.5 h*; 11 h |
 | 16.00 | "Forge" (16.45) | Cards and ingot stub fade; *Meet* → FORGE lockup | Logo on the downbeat after 7 bars (hero hit 2) |
 | 17.50 | "Sketch / Render / 3D / One studio" | Three words light in turn, then **One studio.** in gold | Slices fly back and **re-forge** into one whole glowing bar |
-| 23.30 | "making" | *Fewer apps.* **More making.** | Bar cools to a steady glow |
+| 23.30 | "making" | *Fewer tools.* **More making.** | Bar cools to a steady glow |
 | 25.56 | "Forge." | End card: FORGE lockup | Bar fades; last chord rings under the card to 30.0 |
 | 26.43 | "Establish… hands" | The verse fades in under the lockup as he says it: *"Establish the work of our hands."* · PSALM 90:17 | Stillness; nothing moves while it's spoken, hold to 30.0 |
 
@@ -139,11 +139,11 @@ text.
 Your calendar is lying to you.
 It says forty hours of design this week.
 You actually designed... eleven.
-References ate nine. Redraws took eight and a half. Renders burned six.
+References cost nine. Redraws took eight and a half. Renders burned six.
 And app-switching?... Five and a half.
 Meet Forge.
 Sketch it. Render it. Turn it in three D. One studio.
-Fewer apps. More making.
+Fewer tools. More making.
 Forge.
 
 Establish the work of our hands.
@@ -231,3 +231,18 @@ That makes 2 hero hits in total.
 - [ ] Sign it: end card (FORGE lockup + Psalm 90:17, spoken), last chord ringing under it
 - [ ] Verse checked word-for-word against the translation the app uses (NIV wording)
 - [ ] Hours in Step 01 replaced with real data
+
+---
+
+## Read-through notes
+
+The first reads were checked against speech-to-text transcripts:
+
+- "References **ate** nine" transcribed as "Reference 8, 9". The homophone
+  turns into a confusing number, so the line is now **"References cost nine."**
+- "Fewer **apps**" transcribed twice as "few webs" (the R links into the vowel),
+  so the line is now **"Fewer tools. More making."**
+- "Meet Forge" needs a firm M (it once came through as "Neat Forge"), and
+  "Turn it **in** three D" must keep the "in".
+- Leave real stops between "One studio." / "Fewer tools. More making." /
+  "Forge." and a full breath before the verse.
