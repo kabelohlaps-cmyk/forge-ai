@@ -243,6 +243,6 @@ The first reads were checked against speech-to-text transcripts:
 - "Fewer **apps**" transcribed twice as "few webs" (the R links into the vowel),
   so the line is now **"Fewer tools. More making."**
 - "Meet Forge" needs a firm M (it once came through as "Neat Forge"), and
-  "Turn it **into** three D" must keep the "in".
+  "Turn it **into** three D" reads more naturally than "in" and is now the line.
 - Leave real stops between "One studio." / "Fewer tools. More making." /
   "Forge." and a full breath before the verse.
