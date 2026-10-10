@@ -2,12 +2,17 @@ from fastapi import APIRouter, Request, HTTPException, Depends, Header
 from pydantic import BaseModel
 from typing import Optional
 import json
+import logging
 from datetime import datetime
 from app.services.paypal import paypal_service, PLANS, PlanTier
 from app.db import get_db
 from app.auth import get_current_user
 from app.services.subscriptions import downgrade_if_lapsed
 router = APIRouter(prefix="/billing", tags=["billing"])
+log = logging.getLogger(__name__)
+# PayPal can't reactivate these, so a late or retried ACTIVATED/SUSPENDED for
+# one is stale and must not overwrite it (webhooks aren't delivered in order).
+_FINAL_STATUSES = ("CANCELLED", "EXPIRED")
 class SubscribeRequest(BaseModel):
     tier: PlanTier
     return_url: Optional[str] = None
@@ -27,34 +32,53 @@ async def paypal_webhook(request: Request, db=Depends(get_db), paypal_transmissi
     if not await paypal_service.verify_webhook(h, raw): raise HTTPException(401, "Invalid webhook signature")
     ev = json.loads(raw); et = ev.get("event_type"); res = ev.get("resource", {})
     if et == "BILLING.SUBSCRIPTION.ACTIVATED":
-        cid = res.get("custom_id",""); uid = int(cid.replace("user_","")) if cid else None
-        if uid:
-            tier = _resolve(res.get("plan_id"))
-            await db.execute("UPDATE subscriptions SET status='ACTIVE',tier=$1,activated_at=now(),next_billing_at=COALESCE($3,now()+interval '1 month') WHERE paypal_sub_id=$2", tier, res.get("id"), _next_billing(res))
-            await _grant(db, uid, tier)
+        await _activate(db, res)
     elif et == "BILLING.SUBSCRIPTION.CANCELLED":
         # No downgrade here: paid features last until the end of the paid month
         # (see app/services/subscriptions.py).
         await db.execute("UPDATE subscriptions SET status='CANCELLED',cancelled_at=now() WHERE paypal_sub_id=$1", res.get("id"))
     elif et == "BILLING.SUBSCRIPTION.SUSPENDED":
-        uid = await db.fetchval("UPDATE subscriptions SET status='SUSPENDED',suspended_at=now() WHERE paypal_sub_id=$1 RETURNING user_id", res.get("id"))
+        uid = await db.fetchval("UPDATE subscriptions SET status='SUSPENDED',suspended_at=now() WHERE paypal_sub_id=$1 AND status <> ALL($2::text[]) RETURNING user_id", res.get("id"), list(_FINAL_STATUSES))
         if uid: await downgrade_if_lapsed(db, uid)
     elif et == "BILLING.SUBSCRIPTION.EXPIRED":
         uid = await db.fetchval("UPDATE subscriptions SET status='EXPIRED',expired_at=now() WHERE paypal_sub_id=$1 RETURNING user_id", res.get("id"))
         if uid: await downgrade_if_lapsed(db, uid)
     elif et == "PAYMENT.SALE.COMPLETED":
-        sid = res.get("billing_agreement_id")
-        if sid: await db.execute("UPDATE subscriptions SET last_payment_at=now(),next_billing_at=now()+interval '1 month' WHERE paypal_sub_id=$1", sid)
+        # Dated from the sale itself, and never moved backwards, so a retried or
+        # late delivery of an older payment can't shift the paid-through date.
+        sid = res.get("billing_agreement_id"); paid_at = _parse_time(res.get("create_time"))
+        if sid: await db.execute("UPDATE subscriptions SET last_payment_at=GREATEST(last_payment_at,COALESCE($2,now())),next_billing_at=GREATEST(next_billing_at,COALESCE($2,now())+interval '1 month') WHERE paypal_sub_id=$1", sid, paid_at)
     return {"status":"ok"}
-def _next_billing(res):
-    # PayPal's ISO timestamp, e.g. "2026-11-09T10:00:00Z"
-    raw = (res.get("billing_info") or {}).get("next_billing_time")
+async def _activate(db, res):
+    sid = res.get("id")
+    if not sid: return
+    row = await db.fetchrow("SELECT user_id, tier, status FROM subscriptions WHERE paypal_sub_id=$1", sid)
+    if row and row["status"] in _FINAL_STATUSES:
+        log.info("Ignoring ACTIVATED for %s subscription %s", row["status"], sid); return
+    cid = res.get("custom_id") or ""
+    uid = int(cid.removeprefix("user_")) if cid.startswith("user_") else (row and row["user_id"])
+    # The plan_id should map to a tier; if it doesn't (e.g. a PAYPAL_PLAN_* env
+    # var is wrong), fall back to the tier the user chose at /billing/subscribe.
+    tier = _resolve(res.get("plan_id")) or (row and row["tier"])
+    if not uid or tier not in {t.value for t in PLANS}:
+        log.error("Can't activate subscription %s: user=%r plan_id=%r tier=%r", sid, uid, res.get("plan_id"), tier); return
+    # Upsert, so a subscription with no row from /billing/subscribe is still
+    # recorded and can be cancelled or expired later.
+    await db.execute(
+        "INSERT INTO subscriptions (user_id,paypal_sub_id,tier,status,activated_at,next_billing_at) VALUES ($1,$2,$3,'ACTIVE',now(),COALESCE($4,now()+interval '1 month')) "
+        "ON CONFLICT (paypal_sub_id) DO UPDATE SET status='ACTIVE',tier=$3,activated_at=COALESCE(subscriptions.activated_at,now()),next_billing_at=GREATEST(subscriptions.next_billing_at,EXCLUDED.next_billing_at)",
+        uid, sid, tier, _next_billing(res))
+    await _grant(db, uid, tier)
+def _parse_time(raw):
+    # PayPal's ISO timestamps, e.g. "2026-11-09T10:00:00Z"
     try: return datetime.fromisoformat(raw.replace("Z", "+00:00")) if raw else None
     except ValueError: return None
+def _next_billing(res):
+    return _parse_time((res.get("billing_info") or {}).get("next_billing_time"))
 def _resolve(plan_id):
     for t, c in PLANS.items():
         if c["id"] == plan_id: return t.value
-    return PlanTier.FREE.value
+    return None
 async def _grant(db, uid, tier):
     p = PLANS.get(PlanTier(tier))
     if not p: return
