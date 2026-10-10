@@ -39,7 +39,7 @@ app-switching → sketch, render, 3D viewer and spec sheets in one project.
 
 ## 02 · Script
 
-12 lines · 57 words · ~27 s of voice. The timings are scratch estimates and get
+12 lines + the verse · 63 words · ~29.5 s of voice, ~31.5 s with the end hold. The timings are scratch estimates and get
 replaced by the real word timings in Step 05.
 
 | # | In (s) | Line |
@@ -56,13 +56,16 @@ replaced by the real word timings in Step 05.
 | 10 | 18.90 | Sketch it. Render it. Turn it in 3D… **One studio.** |
 | 11 | 24.40 | Fewer apps. More making. |
 | 12 | 26.53 | Forge. |
-| — | 26.90 | *On screen only, not spoken:* "Establish the work of our hands." — Psalm 90:17 |
+| 13 | 27.40 | *(softer, slower)* Establish the work of our hands. *(Psalm 90:17, the reference is on screen only)* |
 
 The hook (line 1, under 2 s) accuses something the viewer trusts. There's one
 line per cost, verb-led ("References ate…"), with the numbers written as spoken
-words. Line 11 is the 4-word payoff, then the name alone. The verse sits silently on
-the end card under the logo, so it closes the ad without crowding the voice or
-pushing it past 30 s.
+words. Line 11 is the 4-word payoff, then the name alone. Then he speaks the verse as
+a quiet benediction over the end card.
+
+> **Length:** the spoken verse takes the ad to about 31.5 s. That's fine for
+> social and YouTube. For a strict 30 s broadcast slot, cut line 8 ("Six tools
+> open.") and its windows beat; that saves ~1.4 s and keeps the verse.
 
 ---
 
@@ -94,8 +97,8 @@ References 22.5 % · Redraws 21.25 % · Renders 15 % · App-switching 13.75 %.
 | 17.40 | "Forge" (17.85) | Windows collapse into centre → FORGE lockup | Logo on the bar 8 downbeat (hero hit 2) |
 | 18.90 | "Sketch / Render / 3D / One studio" | Three words light in turn, then **One studio.** in gold | Slices fly back and **re-forge** into one whole glowing bar |
 | 24.40 | "making" | *Fewer apps.* **More making.** | Bar cools to a steady glow |
-| 26.53 | "Forge." | End card: FORGE lockup | Bar fades; last chord rings under the card to 29.5 |
-| 26.90 | — | Verse fades in under the lockup: *"Establish the work of our hands."* · PSALM 90:17 | Stillness; nothing moves while it's read |
+| 26.53 | "Forge." | End card: FORGE lockup | Bar fades; last chord rings under the card to 31.5 |
+| 27.40 | "Establish… hands" | The verse fades in under the lockup as he says it: *"Establish the work of our hands."* · PSALM 90:17 | Stillness; nothing moves while it's spoken, hold to 31.5 |
 
 **9:16 re-layout (don't crop):** caption sits at 20–30 % of the height. The
 ingot is centred at ~45 %. Cost cards stack under the ingot as a 2×2 grid, kept
@@ -146,11 +149,18 @@ Meet Forge.
 Sketch it. Render it. Turn it in three D. One studio.
 Fewer apps. More making.
 Forge.
+
+Establish the work of our hands.
 ```
 
 - Respelling: "Forge" is unambiguous. If you say the full name, write it "Forge A I"
   (not "Forge AI", which some voices read as "Forge-eye"). "3D" → "three D".
-- Max 2 long pauses: after "designed…" (~0.39 s) and after "app-switching?" (~0.35 s).
+- Max 2 long pauses inside the ad: after "designed…" (~0.39 s) and after
+  "app-switching?" (~0.35 s). Before the verse, leave a deliberate ~0.6 s breath
+  after "Forge." so it reads as a separate moment, not another tagline.
+- **The verse:** softer and slower than the rest, almost to himself: a blessing,
+  not a pitch. Lean a little on "work" and let "hands" fall away gently. Don't
+  speak the reference.
 - **Direction:** male, deep and soothing, with an African English accent.
   Calm, unhurried authority: a storyteller at dusk, not a hype announcer. Warm
   low register, with the numbers spoken slowly and with certainty. Let
@@ -159,7 +169,7 @@ Forge.
   specific one (e.g. South African, Nigerian, Kenyan, Ghanaian) and stay with it
   across both takes, so the vowels on the numbers stay consistent.
 - **Pace check:** a soothing read runs slower than the guide's "slightly fast"
-  reference. If the take runs past ~27.5 s, don't speed it up. Cut line 8
+  reference. If the take runs past ~30 s before the end hold, don't speed it up. Cut line 8
   ("Six tools open.") first, then shorten line 10 to "Sketch. Render. 3D. One studio."
 - **Mix note:** a deep voice sits on top of the music's low end. Keep the pad and
   sub under the voice, and high-pass the music at ~120 Hz while he speaks.
@@ -182,8 +192,9 @@ final "Forge." = 17.85 + 4 × 2.169 = 26.53 s  (bar 12)
 **Music brief:** 110.7 BPM, 4/4, starts at 0.5 s. Felt piano, warm pad, soft
 pulse, plus one struck-metal bell (anvil-like, high and clean) instead of
 glassy bells, for the forge. Keep it sparse under the cost lines. **Lift exactly
-on bar 8** (the logo, 17.85 s) and **resolve on bar 12** (26.53 s), letting the
-last chord ring to 29 s.
+on bar 8** (the logo, 17.85 s) and **resolve on bar 12** (26.53 s), then hold that
+chord under the spoken verse and let it ring out to 31.5 s. Strip the pulse at
+bar 12, leaving pad and bell only, so the verse sits in near-silence.
 
 ---
 
@@ -220,6 +231,6 @@ That makes 2 hero hits in total.
 - [ ] 9:16 safe zones: titles at 20–30 % of the height, nothing in the bottom 18 %
 - [ ] Masters: 1920×1080 and 1080×1920, 60 fps, H.264 ~20 Mb/s, 48 kHz stereo
 - [ ] Hand-off: voice / music / SFX stems + an edit with every sound on its own clip and markers on every hit
-- [ ] Sign it: end card (FORGE lockup + Psalm 90:17), last chord ringing under it
+- [ ] Sign it: end card (FORGE lockup + Psalm 90:17, spoken), last chord ringing under it
 - [ ] Verse checked word-for-word against the translation the app uses (NIV wording)
 - [ ] Hours in Step 01 replaced with real data

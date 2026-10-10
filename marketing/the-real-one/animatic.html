@@ -144,13 +144,13 @@
   <button id="play">Pause</button>
   <button id="restart">Restart</button>
   <button id="aspect">Switch to 9:16</button>
-  <input id="scrub" type="range" min="0" max="29.5" step="0.01" value="0">
+  <input id="scrub" type="range" min="0" max="31.5" step="0.01" value="0">
   <span id="time">0.00 s</span>
   <div id="line"></div>
 </div>
 
 <script>
-const END = 29.5;
+const END = 31.5;
 const $ = id => document.getElementById(id);
 const stage = $('stage'), frame = $('frame');
 
@@ -170,8 +170,8 @@ const CAPS = [
   [21.40, 22.60, 'Turn it in <b>3D</b>.',                  'Turn it in 3D…'],
   [22.60, 24.30, '<b class="a">One studio.</b>',           'One studio.'],
   [24.40, 26.40, 'Fewer apps. <b>More making.</b>',        'Fewer apps. More making.'],
-  [26.53, 26.90, '',                                       'Forge.'],
-  [26.90, END,   '',                                       '(on screen) “Establish the work of our hands.” — Psalm 90:17'],
+  [26.53, 27.40, '',                                       'Forge.'],
+  [27.40, END,   '',                                       'Establish the work of our hands.'],
 ];
 // Hours counter keyframes [t, value].
 const COUNT = [[0,0],[2.5,0],[3.4,40],[5.6,40],[6.6,11],[7.3,11],[7.7,40],[8.0,40],[8.5,31],[10.0,31],[10.5,22.5],[12.1,22.5],[12.5,16.5],[14.9,16.5],[15.3,11],[END,11]];
@@ -239,7 +239,7 @@ function render(t){
 
   // logo on bar 8, end card on bar 12
   toggle($('logo'), 'on', between(t, 17.85, 18.9) || t >= 26.53);
-  toggle($('tag'), 'on', t >= 26.9);
+  toggle($('tag'), 'on', t >= 27.4);
 
   $('scrub').value = t;
   $('time').textContent = t.toFixed(2) + ' s';
