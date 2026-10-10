@@ -39,7 +39,7 @@ app-switching → sketch, render, 3D viewer and spec sheets in one project.
 
 ## 02 · Script
 
-12 lines + the verse · 63 words · ~29.5 s of voice, ~31.5 s with the end hold. The timings are scratch estimates and get
+12 lines (11 + the verse) · 60 words · ~29 s of voice, **30.0 s** with the end hold. The timings are scratch estimates and get
 replaced by the real word timings in Step 05.
 
 | # | In (s) | Line |
@@ -51,21 +51,19 @@ replaced by the real word timings in Step 05.
 | 5 | 9.90 | Redraws took eight and a half. |
 | 6 | 12.00 | Renders burned six. |
 | 7 | 13.55 | And app-switching?… Five and a half. |
-| 8 | 16.00 | Six tools open. |
-| 9 | 17.40 | Meet Forge. *("Forge" lands at 17.85)* |
-| 10 | 18.90 | Sketch it. Render it. Turn it in 3D… **One studio.** |
-| 11 | 24.40 | Fewer apps. More making. |
-| 12 | 26.53 | Forge. |
-| 13 | 27.40 | *(softer, slower)* Establish the work of our hands. *(Psalm 90:17, the reference is on screen only)* |
+| 8 | 16.00 | Meet Forge. *("Forge" lands at 16.45)* |
+| 9 | 17.50 | Sketch it. Render it. Turn it in 3D… **One studio.** |
+| 10 | 23.30 | Fewer apps. More making. |
+| 11 | 25.56 | Forge. |
+| 12 | 26.43 | *(softer, slower)* Establish the work of our hands. *(Psalm 90:17, the reference is on screen only)* |
 
 The hook (line 1, under 2 s) accuses something the viewer trusts. There's one
 line per cost, verb-led ("References ate…"), with the numbers written as spoken
-words. Line 11 is the 4-word payoff, then the name alone. Then he speaks the verse as
+words. Line 10 is the 4-word payoff, then the name alone. Then he speaks the verse as
 a quiet benediction over the end card.
 
-> **Length:** the spoken verse takes the ad to about 31.5 s. That's fine for
-> social and YouTube. For a strict 30 s broadcast slot, cut line 8 ("Six tools
-> open.") and its windows beat; that saves ~1.4 s and keeps the verse.
+> **Length:** "Six tools open." was cut so the spoken verse fits a strict 30 s
+> slot. "Meet Forge." now follows the last cost line directly.
 
 ---
 
@@ -93,16 +91,15 @@ References 22.5 % · Redraws 21.25 % · Renders 15 % · App-switching 13.75 %.
 | 9.90 | "Redraws" | *Redraws* **took** | Next slice → card *Redraws −8.5 h*; 22.5 h |
 | 12.00 | "Renders" | *Renders* **burned** | Slice → *Renders −6 h*; 16.5 h |
 | 13.55 | "Five and a half" (14.90) | *And* **app-switching?** | Pause 0.35 s; slice → *Switching −5.5 h*; 11 h |
-| 16.00 | "Six tools" | **6 tools** *open.* · six blurred app windows drift in | Stub of ingot dims behind the windows |
-| 17.40 | "Forge" (17.85) | Windows collapse into centre → FORGE lockup | Logo on the bar 8 downbeat (hero hit 2) |
-| 18.90 | "Sketch / Render / 3D / One studio" | Three words light in turn, then **One studio.** in gold | Slices fly back and **re-forge** into one whole glowing bar |
-| 24.40 | "making" | *Fewer apps.* **More making.** | Bar cools to a steady glow |
-| 26.53 | "Forge." | End card: FORGE lockup | Bar fades; last chord rings under the card to 31.5 |
-| 27.40 | "Establish… hands" | The verse fades in under the lockup as he says it: *"Establish the work of our hands."* · PSALM 90:17 | Stillness; nothing moves while it's spoken, hold to 31.5 |
+| 16.00 | "Forge" (16.45) | Cards and ingot stub fade; *Meet* → FORGE lockup | Logo on the downbeat after 7 bars (hero hit 2) |
+| 17.50 | "Sketch / Render / 3D / One studio" | Three words light in turn, then **One studio.** in gold | Slices fly back and **re-forge** into one whole glowing bar |
+| 23.30 | "making" | *Fewer apps.* **More making.** | Bar cools to a steady glow |
+| 25.56 | "Forge." | End card: FORGE lockup | Bar fades; last chord rings under the card to 30.0 |
+| 26.43 | "Establish… hands" | The verse fades in under the lockup as he says it: *"Establish the work of our hands."* · PSALM 90:17 | Stillness; nothing moves while it's spoken, hold to 30.0 |
 
 **9:16 re-layout (don't crop):** caption sits at 20–30 % of the height. The
 ingot is centred at ~45 %. Cost cards stack under the ingot as a 2×2 grid, kept
-above the bottom 18 %. The six app windows spread on the vertical axis. The end
+above the bottom 18 %. The end
 card lockup is centred at 40 %.
 
 ---
@@ -144,7 +141,6 @@ It says forty hours of design this week.
 You actually designed... eleven.
 References ate nine. Redraws took eight and a half. Renders burned six.
 And app-switching?... Five and a half.
-Six tools open.
 Meet Forge.
 Sketch it. Render it. Turn it in three D. One studio.
 Fewer apps. More making.
@@ -169,8 +165,8 @@ Establish the work of our hands.
   specific one (e.g. South African, Nigerian, Kenyan, Ghanaian) and stay with it
   across both takes, so the vowels on the numbers stay consistent.
 - **Pace check:** a soothing read runs slower than the guide's "slightly fast"
-  reference. If the take runs past ~30 s before the end hold, don't speed it up. Cut line 8
-  ("Six tools open.") first, then shorten line 10 to "Sketch. Render. 3D. One studio."
+  reference. If the take runs past ~29 s, don't speed it up. Shorten line 9
+  to "Sketch. Render. 3D. One studio." first.
 - **Mix note:** a deep voice sits on top of the music's low end. Keep the pad and
   sub under the voice, and high-pass the music at ~120 Hz while he speaks.
 - Generate 2 takes. Keep the one that sounds most certain on "eleven".
@@ -182,19 +178,21 @@ Establish the work of our hands.
 ## 06 · Music & tempo
 
 ```
-bar = (logo time − music start) ÷ bars = (17.85 − 0.5) ÷ 8 = 2.169 s
-BPM = 240 ÷ bar = 240 ÷ 2.169 = 110.7
-final "Forge." = 17.85 + 4 × 2.169 = 26.53 s  (bar 12)
+bar = (logo time − music start) ÷ bars = (16.45 − 0.5) ÷ 7 = 2.279 s
+BPM = 240 ÷ bar = 240 ÷ 2.279 = 105.3
+final "Forge." = 16.45 + 4 × 2.279 = 25.56 s  (4 bars later)
+
+(8 bars would give 120.4 BPM, just over the 95–120 range, so it's 7.)
 ```
 
 *(Redo this with the real "Forge" timestamp from Step 05. Keep 95–120 BPM.)*
 
-**Music brief:** 110.7 BPM, 4/4, starts at 0.5 s. Felt piano, warm pad, soft
+**Music brief:** 105.3 BPM, 4/4, starts at 0.5 s. Felt piano, warm pad, soft
 pulse, plus one struck-metal bell (anvil-like, high and clean) instead of
 glassy bells, for the forge. Keep it sparse under the cost lines. **Lift exactly
-on bar 8** (the logo, 17.85 s) and **resolve on bar 12** (26.53 s), then hold that
-chord under the spoken verse and let it ring out to 31.5 s. Strip the pulse at
-bar 12, leaving pad and bell only, so the verse sits in near-silence.
+on the downbeat after bar 7** (the logo, 16.45 s) and **resolve 4 bars later**
+(25.56 s), then hold that chord under the spoken verse and let it ring out to
+30.0 s. Strip the pulse at the resolve, leaving pad and bell only, so the verse sits in near-silence.
 
 ---
 
@@ -214,10 +212,9 @@ bar 12, leaving pad and bell only, so the verse sits in near-silence.
 - **Slice** (×4): beam hiss 0.15 s → hot-metal *shk* cut → small sizzle tail. The pitch drops a semitone per slice.
 - **Hand-over to card**: soft whoosh + glass card tap.
 - **Counter drop**: falling ticks, count = hours removed × 2.
-- **App windows** (16.0 s): six light taps, randomised pan, slight detune.
-- **Re-forge** (19–23 s): reversed sizzle into a molten swell, then a clean ring.
+- **Re-forge** (18–22 s): reversed sizzle into a molten swell, then a clean ring.
 
-**Hero hit 2:** "Forge" at 17.85: anvil strike + sub boom + the music lift.
+**Hero hit 2:** "Forge" at 16.45: anvil strike + sub boom + the music lift.
 That makes 2 hero hits in total.
 
 ---
