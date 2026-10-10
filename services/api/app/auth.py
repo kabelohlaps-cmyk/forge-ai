@@ -3,6 +3,7 @@ from jose import JWTError
 
 from app.db import get_db
 from app.services.auth_service import decode_access_token
+from app.services.subscriptions import expire_lapsed_plan
 
 
 async def get_current_user(authorization: str = Header(None), db=Depends(get_db)):
@@ -24,4 +25,4 @@ async def get_current_user(authorization: str = Header(None), db=Depends(get_db)
     user = await db.fetchrow("SELECT * FROM users WHERE id = $1", user_id)
     if not user:
         raise HTTPException(401, "User not found")
-    return dict(user)
+    return await expire_lapsed_plan(db, dict(user))

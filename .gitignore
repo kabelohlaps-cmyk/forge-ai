@@ -7,3 +7,7 @@ __pycache__/
 .DS_Store
 dist/
 build/
+*.tsbuildinfo
+.pytest_cache/
+test-results/
+playwright-report/
