@@ -52,7 +52,7 @@ replaced by the real word timings in Step 05.
 | 6 | 12.00 | Renders burned six. |
 | 7 | 13.55 | And app-switching?… Five and a half. |
 | 8 | 16.00 | Meet Forge. *("Forge" lands at 16.45)* |
-| 9 | 17.50 | Sketch it. Render it. Turn it in 3D… **One studio.** |
+| 9 | 17.50 | Sketch it. Render it. Turn it into 3D… **One studio.** |
 | 10 | 23.30 | Fewer tools. More making. |
 | 11 | 25.56 | Forge. |
 | 12 | 26.43 | *(softer, slower)* Establish the work of our hands. *(Psalm 90:17, the reference is on screen only)* |
@@ -142,7 +142,7 @@ You actually designed... eleven.
 References cost nine. Redraws took eight and a half. Renders burned six.
 And app-switching?... Five and a half.
 Meet Forge.
-Sketch it. Render it. Turn it in three D. One studio.
+Sketch it. Render it. Turn it into three D. One studio.
 Fewer tools. More making.
 Forge.
 
@@ -243,6 +243,6 @@ The first reads were checked against speech-to-text transcripts:
 - "Fewer **apps**" transcribed twice as "few webs" (the R links into the vowel),
   so the line is now **"Fewer tools. More making."**
 - "Meet Forge" needs a firm M (it once came through as "Neat Forge"), and
-  "Turn it **in** three D" must keep the "in".
+  "Turn it **into** three D" must keep the "in".
 - Leave real stops between "One studio." / "Fewer tools. More making." /
   "Forge." and a full breath before the verse.
