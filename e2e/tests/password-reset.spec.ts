@@ -1,24 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { logIn, registerViaApi } from './helpers';
+import { OUTBOX, linkFromOutbox, logIn, registerViaApi } from './helpers';
 
-// The API writes outgoing mail here when MAIL_OUTBOX_DIR is set (see services/api/app/services/mailer.py).
-const OUTBOX = process.env.E2E_MAIL_OUTBOX;
-
-async function resetLinkFor(email: string): Promise<string> {
-  let link: string | undefined;
-  await expect
-    .poll(() => {
-      if (!existsSync(OUTBOX!)) return undefined;
-      const mails = readdirSync(OUTBOX!).sort().map((f) => JSON.parse(readFileSync(join(OUTBOX!, f), 'utf8')));
-      const mine = mails.filter((m) => m.to === email).pop();
-      link = mine?.body.match(/https?:\/\/\S+\/reset-password\?token=[\w-]+/)?.[0];
-      return link;
-    }, { timeout: 10_000 })
-    .toBeTruthy();
-  return link!;
-}
+const resetLinkFor = (email: string) => linkFromOutbox(email, 'reset-password');
 
 test.describe('password reset', () => {
   test.skip(!OUTBOX, 'set E2E_MAIL_OUTBOX to the API\'s MAIL_OUTBOX_DIR');
@@ -33,7 +16,7 @@ test.describe('password reset', () => {
     await expect(page.getByText("If an account exists for that email, we've sent a link")).toBeVisible();
 
     const link = await resetLinkFor(email);
-    await page.goto(new URL(link).pathname + new URL(link).search);
+    await page.goto(link);
     const fields = page.locator('input[type=password]');
     await fields.nth(0).fill('my-new-password');
     await fields.nth(1).fill('my-new-password');
@@ -46,7 +29,7 @@ test.describe('password reset', () => {
     await expect(page).toHaveURL(/\/projects$/);
 
     // The link can't be used a second time.
-    await page.goto(new URL(link).pathname + new URL(link).search);
+    await page.goto(link);
     await fields.nth(0).fill('yet-another-pass');
     await fields.nth(1).fill('yet-another-pass');
     await page.getByRole('button', { name: 'Set new password' }).click();

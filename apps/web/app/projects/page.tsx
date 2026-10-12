@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MODES } from '@forge/core';
 import { apiFetch } from '../../lib/api';
+import { VerifyEmailBanner } from '../../components/VerifyEmailBanner';
 
 interface Project {
   id: number;
@@ -28,6 +29,7 @@ function ProjectsPageInner() {
   const [mode, setMode] = useState(presetMode || MODES[0].id);
   // Modes the user's plan includes; null until /users/me loads.
   const [allowedModes, setAllowedModes] = useState<string[] | null>(null);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [brief, setBrief] = useState('');
   const [creating, setCreating] = useState(false);
 
@@ -42,6 +44,7 @@ function ProjectsPageInner() {
     apiFetch('/users/me', backendToken)
       .then((me) => {
         setAllowedModes(me.allowed_modes);
+        setUnverifiedEmail(me.email_verified_at ? null : me.email);
         // Don't preselect a mode the plan doesn't include.
         setMode((m) => (me.allowed_modes.includes(m) ? m : me.allowed_modes[0] ?? m));
       })
@@ -69,6 +72,7 @@ function ProjectsPageInner() {
 
   return (
     <div className="space-y-8">
+      {unverifiedEmail && <VerifyEmailBanner email={unverifiedEmail} />}
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-3xl tracking-widest text-eden-cream">Your Projects</h1>
         <button onClick={() => setShowForm((v) => !v)} className="eden-btn text-sm">

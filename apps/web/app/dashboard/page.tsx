@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { apiFetch } from '../../lib/api';
+import { VerifyEmailBanner } from '../../components/VerifyEmailBanner';
 
 interface Me {
   id: number;
@@ -12,6 +13,7 @@ interface Me {
   allowed_modes: string[];
   renders_used: number;
   plan_ends_at: string | null;
+  email_verified_at: string | null;
 }
 
 export default function DashboardPage() {
@@ -43,6 +45,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {!me.email_verified_at && <VerifyEmailBanner email={me.email} />}
       <div>
         <h1 className="font-serif text-3xl tracking-widest text-eden-cream">Welcome back, {me.name || me.email}</h1>
         <p className="text-eden-sage mt-1">

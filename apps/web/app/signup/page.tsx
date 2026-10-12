@@ -12,6 +12,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [checkEmail, setCheckEmail] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,6 +28,11 @@ export default function SignupPage() {
         const body = await res.json().catch(() => ({}));
         setError(body.detail || 'Could not create account.');
         setSubmitting(false);
+        return;
+      }
+      // With REQUIRE_EMAIL_VERIFICATION the account can't sign in until the link is followed.
+      if ((await res.json()).verification_required) {
+        setCheckEmail(true);
         return;
       }
       // Account created -- now establish a normal session the same way login does.
@@ -47,6 +53,12 @@ export default function SignupPage() {
     <div className="flex min-h-[70vh] items-center justify-center">
       <div className="eden-panel w-full max-w-sm p-8 space-y-5">
         <h1 className="font-serif text-2xl text-eden-gold-light text-center">Plant Your Seed</h1>
+        {checkEmail && (
+          <p className="text-sm text-eden-cream text-center">
+            Almost there! We've sent a link to <span className="text-eden-gold-light">{email}</span>. Verify your
+            email, then <a href="/login" className="text-eden-gold-light hover:underline">sign in</a>.
+          </p>
+        )}
 
         <div className="space-y-2">
           <button onClick={() => signIn('google', { callbackUrl: '/projects' })} className="eden-btn w-full text-sm">
