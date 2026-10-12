@@ -61,6 +61,9 @@ export default function LoginPage() {
             required
           />
           <button type="submit" className="eden-btn-primary w-full">Sign in</button>
+          <p className="text-right text-xs">
+            <a href="/forgot-password" className="text-eden-stone hover:text-eden-gold-light hover:underline">Forgot password?</a>
+          </p>
         </form>
 
         <p className="text-center text-sm text-eden-stone">
