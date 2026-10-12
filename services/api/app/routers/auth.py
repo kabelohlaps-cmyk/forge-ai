@@ -60,14 +60,47 @@ async def register(body: RegisterRequest, db=Depends(get_db)):
     return {"token": token, "user": _user_public(row)}
 
 
+# Password guessing is limited per email address. Not per IP: the web app's
+# NextAuth server makes every login call, so the API sees one IP for everyone.
+MAX_LOGIN_FAILURES = 5
+LOGIN_FAILURE_WINDOW_SECONDS = 15 * 60
+
+
+async def _check_login_rate_limit(db, email: str):
+    recent = await db.fetchrow(
+        "SELECT count(*) AS n, min(attempted_at) AS oldest FROM login_failures "
+        "WHERE email = $1 AND attempted_at > now() - make_interval(secs => $2)",
+        email, LOGIN_FAILURE_WINDOW_SECONDS,
+    )
+    if recent["n"] >= MAX_LOGIN_FAILURES:
+        # Seconds until the oldest failure leaves the window.
+        wait = await db.fetchval(
+            "SELECT ceil(extract(epoch FROM $1::timestamptz + make_interval(secs => $2) - now()))::int",
+            recent["oldest"], LOGIN_FAILURE_WINDOW_SECONDS,
+        )
+        wait = max(wait or 1, 1)
+        raise HTTPException(
+            429,
+            f"Too many failed sign-in attempts. Try again in {max(1, round(wait / 60))} minute(s).",
+            headers={"Retry-After": str(wait)},
+        )
+
+
+async def _record_login_failure(db, email: str):
+    await db.execute("INSERT INTO login_failures (email) VALUES ($1)", email)
+    await db.execute("DELETE FROM login_failures WHERE attempted_at < now() - interval '1 day'")
+
+
 @router.post("/login")
 async def login(body: LoginRequest, db=Depends(get_db)):
+    await _check_login_rate_limit(db, body.email)
     row = await db.fetchrow("SELECT * FROM users WHERE lower(email) = $1", body.email)
-    if not row or not row["password_hash"]:
-        raise HTTPException(401, "Invalid email or password")
-    if not verify_password(body.password, row["password_hash"]):
+    # Unknown emails count as failures too, so the limit doesn't reveal which accounts exist.
+    if not row or not row["password_hash"] or not verify_password(body.password, row["password_hash"]):
+        await _record_login_failure(db, body.email)
         raise HTTPException(401, "Invalid email or password")
 
+    await db.execute("DELETE FROM login_failures WHERE email = $1", body.email)
     token = create_access_token(row["id"], row["token_version"])
     return {"token": token, "user": _user_public(row)}
 

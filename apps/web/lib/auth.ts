@@ -20,6 +20,11 @@ export const authOptions: NextAuthOptions = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: credentials.email, password: credentials.password }),
         });
+        // NextAuth passes a thrown error's message to the login page as res.error.
+        if (res.status === 429) {
+          const { detail } = await res.json().catch(() => ({}));
+          throw new Error(detail || 'Too many failed sign-in attempts. Try again later.');
+        }
         if (!res.ok) return null;
         const { token, user } = await res.json();
         return { id: String(user.id), email: user.email, name: user.name, backendToken: token };

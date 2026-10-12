@@ -57,3 +57,14 @@ test('sign out of all devices ends sessions elsewhere too', async ({ browser }) 
   await logIn(phone, email);
   await expect(phone).toHaveURL(/\/projects$/);
 });
+
+test('repeated wrong passwords lock the login with a clear message', async ({ page }) => {
+  const email = await registerViaApi();
+  for (let i = 0; i < 5; i++) {
+    await logIn(page, email, 'wrong-password');
+    await expect(page.getByText('Invalid email or password.')).toBeVisible();
+  }
+  await logIn(page, email); // right password, but locked for now
+  await expect(page.getByText(/Too many failed sign-in attempts\. Try again in \d+ minute/)).toBeVisible();
+  await expect(page).toHaveURL(/\/login/);
+});
