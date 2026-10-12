@@ -15,6 +15,7 @@ TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL", "postgresql://forge:forge@localhost:5432/forge_test"
 )
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+os.environ.pop("SMTP_HOST", None)  # tests must never send real email
 os.environ.setdefault("JWT_SECRET", "test-jwt-secret-" + "x" * 32)
 os.environ.setdefault("ENCRYPTION_MASTER_KEY", base64.b64encode(b"k" * 32).decode())
 
@@ -23,7 +24,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from app.main import app  # noqa: E402
 from app.routers import agent as agent_router  # noqa: E402
 
-TABLES = "login_failures, paypal_webhook_events, usage_events, design_memories, assets, design_versions, projects, subscriptions, users"
+TABLES = "password_resets, login_failures, paypal_webhook_events, usage_events, design_memories, assets, design_versions, projects, subscriptions, users"
 
 
 def run_sql(query: str, *args):

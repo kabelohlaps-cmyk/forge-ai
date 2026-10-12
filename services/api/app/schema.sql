@@ -9,6 +9,8 @@ CREATE TABLE usage_events(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users
 CREATE INDEX idx_users_email_lower ON users(lower(email));
 CREATE TABLE login_failures(id SERIAL PRIMARY KEY,email TEXT NOT NULL,attempted_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE paypal_webhook_events(event_id TEXT PRIMARY KEY,event_type TEXT,received_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE password_resets(token_hash TEXT PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id),created_at TIMESTAMPTZ NOT NULL DEFAULT now(),expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ);
+CREATE INDEX idx_password_resets_user ON password_resets(user_id, created_at);
 CREATE INDEX idx_login_failures_email ON login_failures(email, attempted_at);
 CREATE INDEX idx_sub_user ON subscriptions(user_id);
 CREATE INDEX idx_sub_status ON subscriptions(status);
