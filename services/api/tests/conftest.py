@@ -23,7 +23,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from app.main import app  # noqa: E402
 from app.routers import agent as agent_router  # noqa: E402
 
-TABLES = "usage_events, design_memories, assets, design_versions, projects, subscriptions, users"
+TABLES = "login_failures, paypal_webhook_events, usage_events, design_memories, assets, design_versions, projects, subscriptions, users"
 
 
 def run_sql(query: str, *args):

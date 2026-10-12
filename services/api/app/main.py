@@ -1,10 +1,19 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
+from app.migrations import run_migrations
 from app.routers import auth, projects, agent, assets, billing, users
 
-app = FastAPI(title="FORGE AI API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await run_migrations()  # bring databases made from an older schema.sql up to date
+    yield
+
+
+app = FastAPI(title="FORGE AI API", version="0.1.0", lifespan=lifespan)
 # Multi-user app now -- CORS still scoped to the one web frontend origin,
 # but auth itself is per-user JWTs, not a single shared secret.
 allowed_origin = os.getenv("WEB_ORIGIN", "http://localhost:3000")

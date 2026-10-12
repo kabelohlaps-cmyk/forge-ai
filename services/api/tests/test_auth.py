@@ -52,3 +52,19 @@ def test_login_matches_mixed_case_emails_saved_before_normalization(client, make
     r = client.post("/auth/login", json={"email": "legacy.user@example.com", "password": "password-123"})
     assert r.status_code == 200
     assert r.json()["user"]["id"] == user.id
+
+
+def test_migrations_upgrade_a_database_made_from_the_old_schema(client):
+    """An old database (no token_version etc.) is brought up to date at startup."""
+    import asyncio
+    from app.migrations import run_migrations
+    from tests.conftest import run_sql
+
+    run_sql("ALTER TABLE users DROP COLUMN token_version")
+    run_sql("DROP TABLE login_failures")
+    run_sql("DROP TABLE paypal_webhook_events")
+    client.portal.call(run_migrations)  # run on the app's own event loop/pool
+    cols = [r[0] for r in run_sql("SELECT column_name FROM information_schema.columns WHERE table_name='users'")]
+    assert "token_version" in cols
+    assert run_sql("SELECT to_regclass('login_failures'), to_regclass('paypal_webhook_events')")[0] == ("login_failures", "paypal_webhook_events")
+    client.portal.call(run_migrations)  # and running again is a no-op

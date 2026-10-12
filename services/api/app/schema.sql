@@ -1,5 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS vector;
-CREATE TABLE users(id SERIAL PRIMARY KEY,email TEXT UNIQUE NOT NULL,name TEXT,password_hash TEXT,google_id TEXT UNIQUE,apple_id TEXT UNIQUE,tier TEXT DEFAULT 'free',render_quota INTEGER DEFAULT 10,allowed_modes TEXT[] DEFAULT ARRAY['vehicle','interior'],created_at TIMESTAMPTZ DEFAULT now(),updated_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE users(id SERIAL PRIMARY KEY,email TEXT UNIQUE NOT NULL,name TEXT,password_hash TEXT,google_id TEXT UNIQUE,apple_id TEXT UNIQUE,tier TEXT DEFAULT 'free',render_quota INTEGER DEFAULT 10,allowed_modes TEXT[] DEFAULT ARRAY['vehicle','interior'],token_version INTEGER NOT NULL DEFAULT 0,created_at TIMESTAMPTZ DEFAULT now(),updated_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE subscriptions(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),paypal_sub_id TEXT UNIQUE NOT NULL,tier TEXT NOT NULL,status TEXT DEFAULT 'PENDING',created_at TIMESTAMPTZ DEFAULT now(),activated_at TIMESTAMPTZ,cancelled_at TIMESTAMPTZ,suspended_at TIMESTAMPTZ,expired_at TIMESTAMPTZ,last_payment_at TIMESTAMPTZ,next_billing_at TIMESTAMPTZ);
 CREATE TABLE projects(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),title TEXT NOT NULL,mode TEXT NOT NULL,brief TEXT,status TEXT DEFAULT 'active',world_id INTEGER,created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE design_versions(id SERIAL PRIMARY KEY,project_id INTEGER REFERENCES projects(id),parent_id INTEGER,mode TEXT NOT NULL,prompt TEXT,spec_sheet JSONB DEFAULT '{}',encryption_iv TEXT,created_at TIMESTAMPTZ DEFAULT now());
@@ -7,6 +7,9 @@ CREATE TABLE assets(id SERIAL PRIMARY KEY,version_id INTEGER REFERENCES design_v
 CREATE TABLE design_memories(id SERIAL PRIMARY KEY,project_id INTEGER REFERENCES projects(id),content TEXT NOT NULL,embedding vector(1536),memory_type TEXT DEFAULT 'design',metadata JSONB DEFAULT '{}',created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE usage_events(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),feature TEXT NOT NULL,quantity INTEGER DEFAULT 1,metadata JSONB DEFAULT '{}',created_at TIMESTAMPTZ DEFAULT now());
 CREATE INDEX idx_users_email_lower ON users(lower(email));
+CREATE TABLE login_failures(id SERIAL PRIMARY KEY,email TEXT NOT NULL,attempted_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE paypal_webhook_events(event_id TEXT PRIMARY KEY,event_type TEXT,received_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE INDEX idx_login_failures_email ON login_failures(email, attempted_at);
 CREATE INDEX idx_sub_user ON subscriptions(user_id);
 CREATE INDEX idx_sub_status ON subscriptions(status);
 CREATE INDEX idx_projects_user ON projects(user_id);
