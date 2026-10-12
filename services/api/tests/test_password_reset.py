@@ -12,7 +12,8 @@ def outbox(monkeypatch):
     sent = []
 
     async def capture(to, subject, body):
-        sent.append({"to": to, "subject": subject, "body": body})
+        if subject == "Reset your FORGE password":  # ignore sign-up verification emails
+            sent.append({"to": to, "subject": subject, "body": body})
 
     monkeypatch.setattr(mailer, "send_email", capture)
     return sent

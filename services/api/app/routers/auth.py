@@ -37,6 +37,14 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+class ResendVerificationRequest(BaseModel):
+    email: Email
+
+
 class PasswordResetRequest(BaseModel):
     email: Email
 
@@ -74,6 +82,10 @@ async def register(body: RegisterRequest, db=Depends(get_db)):
         body.name,
         hash_password(body.password),
     )
+    await _send_verification_email(db, row["id"], row["email"])
+    if _verification_required():
+        # No token until the link is followed, or sign-up would bypass the check.
+        return {"verification_required": True, "user": _user_public(row)}
     token = create_access_token(row["id"], row["token_version"])
     return {"token": token, "user": _user_public(row)}
 
@@ -119,29 +131,34 @@ async def login(body: LoginRequest, db=Depends(get_db)):
         raise HTTPException(401, "Invalid email or password")
 
     await db.execute("DELETE FROM login_failures WHERE email = $1", body.email)
+    if _verification_required() and not row["email_verified_at"]:
+        await _send_verification_email(db, row["id"], row["email"])  # rate limited
+        raise HTTPException(403, EMAIL_NOT_VERIFIED_MESSAGE)
     token = create_access_token(row["id"], row["token_version"])
     return {"token": token, "user": _user_public(row)}
 
 
-async def _link_provider(db, row, column: str, provider_id: str):
+async def _link_provider(db, row, column: str, provider_id: str, email_verified: bool):
     """Links a Google/Apple identity to an existing account.
 
-    Sign-up doesn't verify email, so anyone could have registered a password
-    account under someone else's address before they arrived. When a provider
-    that has verified the address links to such an account for the first time,
+    An account whose email was never verified may have been registered by
+    someone else before the address's owner arrived. When a provider that has
+    verified the address links to such a password account for the first time,
     the password is removed and every existing session ends (token_version),
-    so whoever set that password loses access and only the address's real
-    owner remains.
+    so whoever set that password loses access and only the real owner remains.
+    A verified account keeps its password: its owner already proved the
+    address is theirs.
     """
     assert column in ("google_id", "apple_id")
-    if row[column] != provider_id and row["password_hash"]:
+    verified = "email_verified_at = COALESCE(email_verified_at, now())" if email_verified else "email_verified_at = email_verified_at"
+    if row[column] != provider_id and row["password_hash"] and not row["email_verified_at"]:
         return await db.fetchrow(
             f"UPDATE users SET {column} = $1, password_hash = NULL, token_version = token_version + 1, "
-            "updated_at = now() WHERE id = $2 RETURNING *",
+            f"{verified}, updated_at = now() WHERE id = $2 RETURNING *",
             provider_id, row["id"],
         )
     return await db.fetchrow(
-        f"UPDATE users SET {column} = $1, updated_at = now() WHERE id = $2 RETURNING *", provider_id, row["id"]
+        f"UPDATE users SET {column} = $1, {verified}, updated_at = now() WHERE id = $2 RETURNING *", provider_id, row["id"]
     )
 
 
@@ -162,10 +179,10 @@ async def oauth_google(body: OAuthRequest, db=Depends(get_db)):
         if not row:
             raise HTTPException(400, "Your Google account's email address isn't verified")
     if row:
-        row = await _link_provider(db, row, "google_id", info["google_id"])
+        row = await _link_provider(db, row, "google_id", info["google_id"], info["email_verified"])
     else:
         row = await db.fetchrow(
-            "INSERT INTO users (email, name, google_id) VALUES ($1, $2, $3) RETURNING *",
+            "INSERT INTO users (email, name, google_id, email_verified_at) VALUES ($1, $2, $3, now()) RETURNING *",
             info["email"],
             info.get("name") or "",
             info["google_id"],
@@ -195,10 +212,10 @@ async def oauth_apple(body: OAuthRequest, db=Depends(get_db)):
             "SELECT * FROM users WHERE apple_id = $1 OR lower(email) = $2", info["apple_id"], info["email"]
         )
         if row:
-            row = await _link_provider(db, row, "apple_id", info["apple_id"])
+            row = await _link_provider(db, row, "apple_id", info["apple_id"], email_verified=True)  # Apple verifies emails
         else:
             row = await db.fetchrow(
-                "INSERT INTO users (email, name, apple_id) VALUES ($1, $2, $3) RETURNING *",
+                "INSERT INTO users (email, name, apple_id, email_verified_at) VALUES ($1, $2, $3, now()) RETURNING *",
                 info["email"],
                 "",
                 info["apple_id"],
@@ -272,8 +289,71 @@ async def confirm_password_reset(body: PasswordResetConfirm, db=Depends(get_db))
         # New password, and every existing session ends (whoever knew the old
         # password is signed out); the login limit is cleared for a fresh start.
         email = await db.fetchval(
-            "UPDATE users SET password_hash = $1, token_version = token_version + 1, updated_at = now() WHERE id = $2 RETURNING email",
+            "UPDATE users SET password_hash = $1, token_version = token_version + 1, "
+            "email_verified_at = COALESCE(email_verified_at, now()), updated_at = now() WHERE id = $2 RETURNING email",
             hash_password(body.password), user_id,
         )
         await db.execute("DELETE FROM login_failures WHERE email = $1", email.lower())
     return {"status": "ok"}
+
+
+# ---------- email verification ----------
+
+VERIFY_TOKEN_TTL_HOURS = 24
+MAX_VERIFY_EMAILS_PER_HOUR = 3
+EMAIL_NOT_VERIFIED_MESSAGE = "Please verify your email address first. We've sent you a new link."
+VERIFY_RESENT_MESSAGE = "If that account still needs verifying, we've sent a new link."
+
+
+def _verification_required() -> bool:
+    """REQUIRE_EMAIL_VERIFICATION=true blocks password logins until the email
+    is verified. Off by default: with no SMTP configured nobody could verify."""
+    return os.getenv("REQUIRE_EMAIL_VERIFICATION", "").lower() in ("1", "true", "yes")
+
+
+async def _send_verification_email(db, user_id: int, email: str) -> None:
+    recent = await db.fetchval(
+        "SELECT count(*) FROM email_verifications WHERE user_id = $1 AND created_at > now() - interval '1 hour'", user_id
+    )
+    if recent >= MAX_VERIFY_EMAILS_PER_HOUR:
+        return
+    token = secrets.token_urlsafe(32)
+    await db.execute(
+        "INSERT INTO email_verifications (token_hash, user_id, expires_at) VALUES ($1, $2, now() + make_interval(hours => $3))",
+        _hash_reset_token(token), user_id, VERIFY_TOKEN_TTL_HOURS,
+    )
+    link = f"{os.getenv('WEB_ORIGIN', 'http://localhost:3000')}/verify-email?token={token}"
+    await mailer.send_email(
+        email,
+        "Verify your FORGE email address",
+        f"Welcome to FORGE! Please confirm this is your email address by opening this link "
+        f"within {VERIFY_TOKEN_TTL_HOURS} hours:\n{link}\n\n"
+        "If you didn't create a FORGE account, you can ignore this email.",
+    )
+
+
+@router.post("/verify-email")
+async def verify_email(body: VerifyEmailRequest, db=Depends(get_db)):
+    """Marks the address verified. Any unexpired link for the account works,
+    and opening it again after it's done just reports success."""
+    user_id = await db.fetchval(
+        "SELECT user_id FROM email_verifications WHERE token_hash = $1 AND expires_at > now()",
+        _hash_reset_token(body.token),
+    )
+    if not user_id:
+        raise HTTPException(400, "This verification link is invalid or has expired. Request a new one.")
+    await db.execute(
+        "UPDATE users SET email_verified_at = COALESCE(email_verified_at, now()), updated_at = now() WHERE id = $1", user_id
+    )
+    await db.execute("UPDATE email_verifications SET used_at = COALESCE(used_at, now()) WHERE user_id = $1", user_id)
+    return {"status": "ok"}
+
+
+@router.post("/verify-email/resend")
+async def resend_verification(body: ResendVerificationRequest, db=Depends(get_db)):
+    """Public, so it works while strict mode blocks login. Same response
+    whether or not the account exists or is already verified."""
+    user = await db.fetchrow("SELECT id, email, email_verified_at FROM users WHERE lower(email) = $1", body.email)
+    if user and not user["email_verified_at"]:
+        await _send_verification_email(db, user["id"], user["email"])
+    return {"status": "ok", "message": VERIFY_RESENT_MESSAGE}

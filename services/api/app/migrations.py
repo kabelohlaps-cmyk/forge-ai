@@ -22,6 +22,12 @@ MIGRATIONS = [
     # password reset links; only a hash of each token is stored (2026-10-12)
     "CREATE TABLE IF NOT EXISTS password_resets(token_hash TEXT PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id),created_at TIMESTAMPTZ NOT NULL DEFAULT now(),expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ)",
     "CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id, created_at)",
+    # email verification (2026-10-12). Google/Apple accounts are verified by
+    # their provider, so existing ones are marked verified.
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ",
+    "UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL AND (google_id IS NOT NULL OR apple_id IS NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS email_verifications(token_hash TEXT PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id),created_at TIMESTAMPTZ NOT NULL DEFAULT now(),expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ)",
+    "CREATE INDEX IF NOT EXISTS idx_email_verifications_user ON email_verifications(user_id, created_at)",
 ]
 
 _LOCK_ID = 7_312_004  # arbitrary, just unique to this app
