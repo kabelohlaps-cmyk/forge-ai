@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from app.db import get_db
 from app.auth import get_current_user
+from app.access import require_mode
 import json
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -66,6 +67,7 @@ async def get_project_messages(project_id: int, user=Depends(get_current_user), 
 
 @router.post("/")
 async def create_project(body: CreateProjectRequest, user=Depends(get_current_user), db=Depends(get_db)):
+    require_mode(user, body.mode)
     r = await db.fetchrow(
         "INSERT INTO projects (user_id,title,mode,brief) VALUES ($1,$2,$3,$4) RETURNING *",
         user["id"], body.title, body.mode, body.brief,

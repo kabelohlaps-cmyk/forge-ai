@@ -20,6 +20,12 @@ export const authOptions: NextAuthOptions = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: credentials.email, password: credentials.password }),
         });
+        // NextAuth passes a thrown error's message to the login page as res.error:
+        // 429 is the login limit, 403 an unverified email when verification is required.
+        if (res.status === 429 || res.status === 403) {
+          const { detail } = await res.json().catch(() => ({}));
+          throw new Error(detail || 'You can\'t sign in right now. Try again later.');
+        }
         if (!res.ok) return null;
         const { token, user } = await res.json();
         return { id: String(user.id), email: user.email, name: user.name, backendToken: token };
@@ -38,7 +44,8 @@ export const authOptions: NextAuthOptions = {
       } as unknown as string,
     }),
   ],
-  session: { strategy: 'jwt' },
+  // Matches the API token's lifetime (JWT_EXPIRY_SECONDS in services/api auth_service.py).
+  session: { strategy: 'jwt', maxAge: 7 * 24 * 60 * 60 },
   pages: { signIn: '/login' },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {

@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { apiFetch } from '../../lib/api';
+import { VerifyEmailBanner } from '../../components/VerifyEmailBanner';
 
 interface Me {
   id: number;
@@ -10,6 +11,9 @@ interface Me {
   tier: string;
   render_quota: number;
   allowed_modes: string[];
+  renders_used: number;
+  plan_ends_at: string | null;
+  email_verified_at: string | null;
 }
 
 export default function DashboardPage() {
@@ -25,18 +29,38 @@ export default function DashboardPage() {
       .catch((e) => setError(e.message));
   }, [session, status]);
 
+  async function signOutEverywhere() {
+    const backendToken = (session as any)?.backendToken;
+    if (!backendToken) return;
+    try {
+      await apiFetch('/auth/logout-all', backendToken, { method: 'POST' });
+    } finally {
+      signOut({ callbackUrl: '/login' });
+    }
+  }
+
   if (status === 'loading') return <p className="text-eden-sage">Loading…</p>;
   if (error) return <p className="text-eden-sunset">{error}</p>;
   if (!me) return <p className="text-eden-sage">Loading your garden…</p>;
 
   return (
     <div className="space-y-8">
+      {!me.email_verified_at && <VerifyEmailBanner email={me.email} />}
       <div>
         <h1 className="font-serif text-3xl tracking-widest text-eden-cream">Welcome back, {me.name || me.email}</h1>
         <p className="text-eden-sage mt-1">
           You're on the <span className="capitalize text-eden-gold-light">{me.tier}</span> plan
-          {me.render_quota >= 0 ? ` — ${me.render_quota} renders/month` : ' — unlimited renders'}.
+          {me.render_quota >= 0
+            ? ` — ${me.renders_used} of ${me.render_quota} renders used this month`
+            : ` — unlimited renders (${me.renders_used} this month)`}.
         </p>
+        {me.plan_ends_at && (
+          <p className="text-sm text-eden-sunset mt-1">
+            Your <span className="capitalize">{me.tier}</span> plan ends on{' '}
+            {new Date(me.plan_ends_at).toLocaleDateString(undefined, { dateStyle: 'long' })}.{' '}
+            <a href="/billing" className="text-eden-gold-light hover:underline">Resubscribe</a>
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -63,6 +87,13 @@ export default function DashboardPage() {
             </span>
           ))}
         </div>
+      </div>
+
+      <div className="border-t border-eden-sage/10 pt-6">
+        <button onClick={signOutEverywhere} className="eden-btn text-xs">
+          Sign out of all devices
+        </button>
+        <p className="mt-1 text-xs text-eden-stone">Ends every session, including this one, for example if you lost a device.</p>
       </div>
     </div>
   );

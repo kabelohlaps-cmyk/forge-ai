@@ -7,18 +7,26 @@ interface Message {
   content: string;
   image_data_uri?: string;
   imageLoading?: boolean;
+  failed?: boolean;
 }
 
 export function ChatPanel({
   messages,
   onSend,
+  onRetry,
   onGenerateImage,
   onOpenSketch,
+  sending = false,
+  emptyHint,
 }: {
   messages: Message[];
   onSend: (t: string) => void;
+  onRetry?: (index: number) => void;
   onGenerateImage?: (index: number) => void;
   onOpenSketch?: (index: number) => void;
+  /** While true, sending is disabled so replies can't interleave. */
+  sending?: boolean;
+  emptyHint?: string;
 }) {
   return (
     <div className="eden-panel flex h-full flex-col overflow-hidden">
@@ -28,6 +36,12 @@ export function ChatPanel({
         <span className="ml-auto text-[10px] uppercase tracking-widest text-eden-stone">Forging</span>
       </div>
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5">
+        {messages.length === 0 && (
+          <div className="py-10 text-center text-eden-stone">
+            <p className="font-serif text-lg text-eden-cream/80">Nothing forged yet.</p>
+            <p className="mt-1 text-sm">{emptyHint ?? 'Describe what you want to create below to begin.'}</p>
+          </div>
+        )}
         {messages.map((m, i) => (
           <motion.div
             key={i}
@@ -51,6 +65,17 @@ export function ChatPanel({
             >
               {m.content}
             </div>
+
+            {m.role === 'user' && m.failed && (
+              <div className="mt-1 text-xs text-eden-sunset">
+                Not sent.{' '}
+                {onRetry && (
+                  <button onClick={() => onRetry(i)} disabled={sending} className="underline hover:text-eden-cream disabled:opacity-50">
+                    Retry
+                  </button>
+                )}
+              </div>
+            )}
 
             {m.role === 'agent' && m.image_data_uri && (
               <img
@@ -88,6 +113,7 @@ export function ChatPanel({
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (sending) return;
           const input = e.currentTarget.elements.namedItem('prompt') as HTMLInputElement;
           if (input.value.trim()) {
             onSend(input.value.trim());
@@ -103,7 +129,9 @@ export function ChatPanel({
             placeholder="Describe what you want to create…"
             className="flex-1 bg-transparent text-eden-cream placeholder:text-eden-stone focus:outline-none"
           />
-          <button type="submit" className="eden-btn text-xs">Forge</button>
+          <button type="submit" disabled={sending} className="eden-btn text-xs disabled:opacity-50">
+            {sending ? 'Forging…' : 'Forge'}
+          </button>
         </div>
       </form>
     </div>

@@ -14,7 +14,9 @@ export default function LoginPage() {
     setError(null);
     const res = await signIn('credentials', { email, password, redirect: false });
     if (res?.error) {
-      setError('Invalid email or password.');
+      // 'CredentialsSignin' is NextAuth's generic wrong-credentials code; anything
+      // else is a message thrown by authorize() in lib/auth.ts, e.g. the login limit.
+      setError(res.error === 'CredentialsSignin' ? 'Invalid email or password.' : res.error);
       return;
     }
     router.push('/projects');
@@ -59,6 +61,9 @@ export default function LoginPage() {
             required
           />
           <button type="submit" className="eden-btn-primary w-full">Sign in</button>
+          <p className="text-right text-xs">
+            <a href="/forgot-password" className="text-eden-stone hover:text-eden-gold-light hover:underline">Forgot password?</a>
+          </p>
         </form>
 
         <p className="text-center text-sm text-eden-stone">

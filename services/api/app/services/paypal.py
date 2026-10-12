@@ -10,6 +10,8 @@ PLANS = {
   PlanTier.ARCHITECT: {"id": os.getenv("PAYPAL_PLAN_ARCHITECT","P-ARCHITECT-PLACEHOLDER"),"price_usd":"39.00","renders":500,"modes":["vehicle","interior","product","architecture","world","character","telecom"]},
   PlanTier.STUDIO: {"id": os.getenv("PAYPAL_PLAN_STUDIO","P-STUDIO-PLACEHOLDER"),"price_usd":"99.00","renders":-1,"modes":["vehicle","interior","product","architecture","world","character","telecom","servers"]},
 }
+# Mirrors FREE_TIER in packages/core/src/plans.ts and the users column defaults in schema.sql.
+FREE_PLAN = {"renders": 10, "modes": ["vehicle", "interior"]}
 class PayPalService:
     def __init__(self): self._t=None; self._e=None
     async def _token(self):
@@ -38,6 +40,13 @@ class PayPalService:
         async with httpx.AsyncClient() as c:
             r=await c.post(f"{BASE}/v1/billing/subscriptions",headers=await self._h(f"sub-{custom_id}-{plan_id}"),json=body)
             r.raise_for_status(); return r.json()
+    async def cancel_subscription(self, subscription_id, reason):
+        """Cancels at PayPal. A subscription PayPal reports as already inactive
+        (422) or unknown (404) counts as cancelled; anything else raises."""
+        async with httpx.AsyncClient() as c:
+            r=await c.post(f"{BASE}/v1/billing/subscriptions/{subscription_id}/cancel",headers=await self._h(),json={"reason":reason[:127]})
+        if r.status_code in (204, 404, 422): return
+        r.raise_for_status()
     async def verify_webhook(self,headers,raw_body):
         vb={"transmission_id":headers.get("paypal-transmission-id"),"transmission_time":headers.get("paypal-transmission-time"),"cert_url":headers.get("paypal-cert-url"),"auth_algo":headers.get("paypal-auth-algo"),"transmission_sig":headers.get("paypal-transmission-sig"),"webhook_id":WHID,"webhook_event":raw_body.decode("utf-8")}
         async with httpx.AsyncClient() as c:
