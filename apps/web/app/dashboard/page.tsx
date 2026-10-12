@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { apiFetch } from '../../lib/api';
 
 interface Me {
@@ -26,6 +26,16 @@ export default function DashboardPage() {
       .then(setMe)
       .catch((e) => setError(e.message));
   }, [session, status]);
+
+  async function signOutEverywhere() {
+    const backendToken = (session as any)?.backendToken;
+    if (!backendToken) return;
+    try {
+      await apiFetch('/auth/logout-all', backendToken, { method: 'POST' });
+    } finally {
+      signOut({ callbackUrl: '/login' });
+    }
+  }
 
   if (status === 'loading') return <p className="text-eden-sage">Loading…</p>;
   if (error) return <p className="text-eden-sunset">{error}</p>;
@@ -74,6 +84,13 @@ export default function DashboardPage() {
             </span>
           ))}
         </div>
+      </div>
+
+      <div className="border-t border-eden-sage/10 pt-6">
+        <button onClick={signOutEverywhere} className="eden-btn text-xs">
+          Sign out of all devices
+        </button>
+        <p className="mt-1 text-xs text-eden-stone">Ends every session, including this one, for example if you lost a device.</p>
       </div>
     </div>
   );

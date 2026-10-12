@@ -18,11 +18,13 @@ async def get_current_user(authorization: str = Header(None), db=Depends(get_db)
 
     token = authorization.removeprefix("Bearer ").strip()
     try:
-        user_id = decode_access_token(token)
-    except JWTError:
+        user_id, token_version = decode_access_token(token)
+    except (JWTError, ValueError):
         raise HTTPException(401, "Invalid or expired token")
 
     user = await db.fetchrow("SELECT * FROM users WHERE id = $1", user_id)
     if not user:
         raise HTTPException(401, "User not found")
+    if token_version != user["token_version"]:
+        raise HTTPException(401, "Your session has ended. Please sign in again.")
     return await expire_lapsed_plan(db, dict(user))

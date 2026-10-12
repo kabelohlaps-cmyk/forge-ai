@@ -36,3 +36,24 @@ test('sign out protects the workspace, and log in rejects a wrong password', asy
   await logIn(page, email);
   await expect(page).toHaveURL(/\/projects$/);
 });
+
+test('sign out of all devices ends sessions elsewhere too', async ({ browser }) => {
+  const email = await registerViaApi();
+  const laptop = await browser.newPage();
+  const phone = await (await browser.newContext()).newPage();
+  for (const p of [laptop, phone]) {
+    await logIn(p, email);
+    await expect(p).toHaveURL(/\/projects$/);
+  }
+
+  await laptop.goto('/dashboard');
+  await laptop.getByRole('button', { name: 'Sign out of all devices' }).click();
+  await expect(laptop).toHaveURL(/\/login/);
+
+  // The other device's session is now rejected by the API, and it is sent to log in.
+  await phone.goto('/dashboard');
+  await expect(phone).toHaveURL(/\/login/);
+
+  await logIn(phone, email);
+  await expect(phone).toHaveURL(/\/projects$/);
+});

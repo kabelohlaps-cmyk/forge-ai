@@ -19,7 +19,9 @@ from passlib.context import CryptContext
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRY_SECONDS = 60 * 60 * 24 * 30  # 30 days
+# Keep in step with session.maxAge in apps/web/lib/auth.ts so the web session
+# and the API token expire together.
+JWT_EXPIRY_SECONDS = 60 * 60 * 24 * 7  # 7 days
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 APPLE_CLIENT_ID = os.getenv("APPLE_CLIENT_ID")  # Apple "Services ID" identifier
@@ -49,16 +51,19 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 # ---------- our own access tokens ----------
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, token_version: int = 0) -> str:
+    """token_version is the user's users.token_version; bumping that column
+    revokes every token issued before (see get_current_user)."""
     now = int(time.time())
-    payload = {"sub": str(user_id), "iat": now, "exp": now + JWT_EXPIRY_SECONDS}
+    payload = {"sub": str(user_id), "ver": token_version, "iat": now, "exp": now + JWT_EXPIRY_SECONDS}
     return jwt.encode(payload, _require_jwt_secret(), algorithm=JWT_ALGORITHM)
 
 
-def decode_access_token(token: str) -> int:
-    """Returns the user id encoded in the token, or raises JWTError."""
+def decode_access_token(token: str) -> tuple[int, int]:
+    """Returns (user id, token version), or raises JWTError. Tokens issued
+    before versions existed count as version 0."""
     payload = jwt.decode(token, _require_jwt_secret(), algorithms=[JWT_ALGORITHM])
-    return int(payload["sub"])
+    return int(payload["sub"]), int(payload.get("ver", 0))
 
 
 # ---------- Google OAuth ----------

@@ -38,7 +38,8 @@ export const authOptions: NextAuthOptions = {
       } as unknown as string,
     }),
   ],
-  session: { strategy: 'jwt' },
+  // Matches the API token's lifetime (JWT_EXPIRY_SECONDS in services/api auth_service.py).
+  session: { strategy: 'jwt', maxAge: 7 * 24 * 60 * 60 },
   pages: { signIn: '/login' },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {

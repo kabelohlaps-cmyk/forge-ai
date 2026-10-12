@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import AfterValidator, BaseModel, EmailStr
 from typing import Annotated
 
+from app.auth import get_current_user
 from app.db import get_db
 from app.services.auth_service import (
     create_access_token,
@@ -55,7 +56,7 @@ async def register(body: RegisterRequest, db=Depends(get_db)):
         body.name,
         hash_password(body.password),
     )
-    token = create_access_token(row["id"])
+    token = create_access_token(row["id"], row["token_version"])
     return {"token": token, "user": _user_public(row)}
 
 
@@ -67,7 +68,7 @@ async def login(body: LoginRequest, db=Depends(get_db)):
     if not verify_password(body.password, row["password_hash"]):
         raise HTTPException(401, "Invalid email or password")
 
-    token = create_access_token(row["id"])
+    token = create_access_token(row["id"], row["token_version"])
     return {"token": token, "user": _user_public(row)}
 
 
@@ -101,7 +102,7 @@ async def oauth_google(body: OAuthRequest, db=Depends(get_db)):
             info["google_id"],
         )
 
-    token = create_access_token(row["id"])
+    token = create_access_token(row["id"], row["token_version"])
     return {"token": token, "user": _user_public(row)}
 
 
@@ -138,5 +139,12 @@ async def oauth_apple(body: OAuthRequest, db=Depends(get_db)):
                 info["apple_id"],
             )
 
-    token = create_access_token(row["id"])
+    token = create_access_token(row["id"], row["token_version"])
     return {"token": token, "user": _user_public(row)}
+
+
+@router.post("/logout-all")
+async def logout_all(user=Depends(get_current_user), db=Depends(get_db)):
+    """Signs the user out everywhere: every token issued so far stops working."""
+    await db.execute("UPDATE users SET token_version = token_version + 1 WHERE id = $1", user["id"])
+    return {"status": "ok"}
