@@ -30,7 +30,19 @@ async def paypal_webhook(request: Request, db=Depends(get_db), paypal_transmissi
     raw = await request.body()
     h = {"paypal-transmission-id": paypal_transmission_id, "paypal-transmission-time": paypal_transmission_time, "paypal-cert-url": paypal_cert_url, "paypal-auth-algo": paypal_auth_algo, "paypal-transmission-sig": paypal_transmission_sig}
     if not await paypal_service.verify_webhook(h, raw): raise HTTPException(401, "Invalid webhook signature")
-    ev = json.loads(raw); et = ev.get("event_type"); res = ev.get("resource", {})
+    ev = json.loads(raw)
+    # The event id is recorded in the same transaction as its effects: a
+    # duplicate delivery is skipped, and if processing fails the record rolls
+    # back too, so PayPal's retry is still processed.
+    async with db.transaction():
+        if ev.get("id"):
+            fresh = await db.fetchval("INSERT INTO paypal_webhook_events (event_id, event_type) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING event_id", ev["id"], ev.get("event_type"))
+            if not fresh:
+                return {"status": "duplicate"}
+        await _handle_event(db, ev)
+    return {"status":"ok"}
+async def _handle_event(db, ev):
+    et = ev.get("event_type"); res = ev.get("resource", {})
     if et == "BILLING.SUBSCRIPTION.ACTIVATED":
         await _activate(db, res)
     elif et == "BILLING.SUBSCRIPTION.CANCELLED":
@@ -48,7 +60,6 @@ async def paypal_webhook(request: Request, db=Depends(get_db), paypal_transmissi
         # late delivery of an older payment can't shift the paid-through date.
         sid = res.get("billing_agreement_id"); paid_at = _parse_time(res.get("create_time"))
         if sid: await db.execute("UPDATE subscriptions SET last_payment_at=GREATEST(last_payment_at,COALESCE($2,now())),next_billing_at=GREATEST(next_billing_at,COALESCE($2,now())+interval '1 month') WHERE paypal_sub_id=$1", sid, paid_at)
-    return {"status":"ok"}
 async def _activate(db, res):
     sid = res.get("id")
     if not sid: return
