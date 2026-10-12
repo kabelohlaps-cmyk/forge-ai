@@ -40,6 +40,13 @@ class PayPalService:
         async with httpx.AsyncClient() as c:
             r=await c.post(f"{BASE}/v1/billing/subscriptions",headers=await self._h(f"sub-{custom_id}-{plan_id}"),json=body)
             r.raise_for_status(); return r.json()
+    async def cancel_subscription(self, subscription_id, reason):
+        """Cancels at PayPal. A subscription PayPal reports as already inactive
+        (422) or unknown (404) counts as cancelled; anything else raises."""
+        async with httpx.AsyncClient() as c:
+            r=await c.post(f"{BASE}/v1/billing/subscriptions/{subscription_id}/cancel",headers=await self._h(),json={"reason":reason[:127]})
+        if r.status_code in (204, 404, 422): return
+        r.raise_for_status()
     async def verify_webhook(self,headers,raw_body):
         vb={"transmission_id":headers.get("paypal-transmission-id"),"transmission_time":headers.get("paypal-transmission-time"),"cert_url":headers.get("paypal-cert-url"),"auth_algo":headers.get("paypal-auth-algo"),"transmission_sig":headers.get("paypal-transmission-sig"),"webhook_id":WHID,"webhook_event":raw_body.decode("utf-8")}
         async with httpx.AsyncClient() as c:

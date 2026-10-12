@@ -80,6 +80,17 @@ async def _activate(db, res):
         "ON CONFLICT (paypal_sub_id) DO UPDATE SET status='ACTIVE',tier=$3,activated_at=COALESCE(subscriptions.activated_at,now()),next_billing_at=GREATEST(subscriptions.next_billing_at,EXCLUDED.next_billing_at)",
         uid, sid, tier, _next_billing(res))
     await _grant(db, uid, tier)
+    await _cancel_replaced_subscriptions(db, uid, sid)
+async def _cancel_replaced_subscriptions(db, uid, new_sid):
+    # Switching plans creates a new PayPal subscription; without this the old
+    # one keeps billing too. SUSPENDED ones are included because PayPal
+    # resumes billing them if they're reactivated. A PayPal error propagates,
+    # rolling back the whole event so PayPal's retry tries again.
+    old = await db.fetch("SELECT paypal_sub_id FROM subscriptions WHERE user_id=$1 AND paypal_sub_id<>$2 AND status IN ('ACTIVE','SUSPENDED')", uid, new_sid)
+    for r in old:
+        await paypal_service.cancel_subscription(r["paypal_sub_id"], f"Replaced by subscription {new_sid}")
+        await db.execute("UPDATE subscriptions SET status='CANCELLED',cancelled_at=now() WHERE paypal_sub_id=$1", r["paypal_sub_id"])
+        log.info("Cancelled subscription %s for user %s: replaced by %s", r["paypal_sub_id"], uid, new_sid)
 def _parse_time(raw):
     # PayPal's ISO timestamps, e.g. "2026-11-09T10:00:00Z"
     try: return datetime.fromisoformat(raw.replace("Z", "+00:00")) if raw else None

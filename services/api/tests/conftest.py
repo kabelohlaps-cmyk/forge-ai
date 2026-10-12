@@ -111,3 +111,15 @@ def make_user(client):
         return user
 
     return _make
+
+
+@pytest.fixture(autouse=True)
+def no_real_paypal_calls(monkeypatch):
+    """Tests must never reach PayPal; ones that expect a call patch this themselves."""
+    from app.services import paypal
+
+    async def unexpected(*args, **kwargs):
+        raise AssertionError("unexpected PayPal API call in a test")
+
+    monkeypatch.setattr(paypal.paypal_service, "cancel_subscription", unexpected)
+    monkeypatch.setattr(paypal.paypal_service, "create_subscription", unexpected)
