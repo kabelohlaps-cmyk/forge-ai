@@ -100,3 +100,37 @@ def test_google_links_account_regardless_of_email_case(client, make_user, google
     user = make_user()
     google_says(user.email.upper())
     assert google_sign_in(client).json()["user"]["id"] == user.id
+
+
+def test_google_link_evicts_whoever_registered_the_email_first(client, make_user, google_says):
+    """Someone registers a password account with the victim's email before
+    the victim arrives; the victim then signs in with Google."""
+    squatter = make_user(password="squatter-pass")
+    google_says(squatter.email)
+    victim = google_sign_in(client).json()
+    assert victim["user"]["id"] == squatter.id  # same account, now linked to Google
+    # The squatter's password no longer works, and their session is over.
+    r = client.post("/auth/login", json={"email": squatter.email, "password": "squatter-pass"})
+    assert r.status_code == 401
+    assert squatter.get("/users/me").status_code == 401
+    # The Google sign-in itself works.
+    assert client.get("/users/me", headers={"Authorization": f"Bearer {victim['token']}"}).status_code == 200
+
+
+def test_signing_in_again_with_an_already_linked_google_account_changes_nothing(client, make_user, google_says):
+    user = make_user()
+    google_says(user.email)
+    first = google_sign_in(client).json()["token"]
+    run_sql("UPDATE users SET password_hash = $1 WHERE id = $2", "set-after-linking", user.id)
+    google_sign_in(client)
+    assert run_sql("SELECT password_hash FROM users WHERE id=$1", user.id)[0][0] == "set-after-linking"
+    assert client.get("/users/me", headers={"Authorization": f"Bearer {first}"}).status_code == 200
+
+
+def test_apple_link_also_evicts_a_password_squatter(client, make_user, apple_key, monkeypatch):
+    squatter = make_user(password="squatter-pass")
+    r = client.post("/auth/oauth/apple", json={"id_token": apple_key(email=squatter.email)})
+    assert r.status_code == 200
+    assert r.json()["user"]["id"] == squatter.id
+    r = client.post("/auth/login", json={"email": squatter.email, "password": "squatter-pass"})
+    assert r.status_code == 401

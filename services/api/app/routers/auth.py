@@ -72,6 +72,28 @@ async def login(body: LoginRequest, db=Depends(get_db)):
     return {"token": token, "user": _user_public(row)}
 
 
+async def _link_provider(db, row, column: str, provider_id: str):
+    """Links a Google/Apple identity to an existing account.
+
+    Sign-up doesn't verify email, so anyone could have registered a password
+    account under someone else's address before they arrived. When a provider
+    that has verified the address links to such an account for the first time,
+    the password is removed and every existing session ends (token_version),
+    so whoever set that password loses access and only the address's real
+    owner remains.
+    """
+    assert column in ("google_id", "apple_id")
+    if row[column] != provider_id and row["password_hash"]:
+        return await db.fetchrow(
+            f"UPDATE users SET {column} = $1, password_hash = NULL, token_version = token_version + 1, "
+            "updated_at = now() WHERE id = $2 RETURNING *",
+            provider_id, row["id"],
+        )
+    return await db.fetchrow(
+        f"UPDATE users SET {column} = $1, updated_at = now() WHERE id = $2 RETURNING *", provider_id, row["id"]
+    )
+
+
 @router.post("/oauth/google")
 async def oauth_google(body: OAuthRequest, db=Depends(get_db)):
     try:
@@ -89,11 +111,7 @@ async def oauth_google(body: OAuthRequest, db=Depends(get_db)):
         if not row:
             raise HTTPException(400, "Your Google account's email address isn't verified")
     if row:
-        row = await db.fetchrow(
-            "UPDATE users SET google_id = $1, updated_at = now() WHERE id = $2 RETURNING *",
-            info["google_id"],
-            row["id"],
-        )
+        row = await _link_provider(db, row, "google_id", info["google_id"])
     else:
         row = await db.fetchrow(
             "INSERT INTO users (email, name, google_id) VALUES ($1, $2, $3) RETURNING *",
@@ -126,11 +144,7 @@ async def oauth_apple(body: OAuthRequest, db=Depends(get_db)):
             "SELECT * FROM users WHERE apple_id = $1 OR lower(email) = $2", info["apple_id"], info["email"]
         )
         if row:
-            row = await db.fetchrow(
-                "UPDATE users SET apple_id = $1, updated_at = now() WHERE id = $2 RETURNING *",
-                info["apple_id"],
-                row["id"],
-            )
+            row = await _link_provider(db, row, "apple_id", info["apple_id"])
         else:
             row = await db.fetchrow(
                 "INSERT INTO users (email, name, apple_id) VALUES ($1, $2, $3) RETURNING *",
