@@ -4,6 +4,10 @@
 FROM node:20-slim AS base
 RUN corepack enable
 WORKDIR /repo
+# Fetch the pnpm pinned in package.json's "packageManager" at build time, so
+# the container doesn't download (a possibly different) pnpm on every start.
+COPY package.json ./
+RUN corepack install
 
 FROM base AS deps
 COPY package.json pnpm-workspace.yaml ./
