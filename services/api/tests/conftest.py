@@ -16,6 +16,7 @@ TEST_DATABASE_URL = os.getenv(
 )
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ.pop("SMTP_HOST", None)  # tests must never send real email
+os.environ.pop("BREVO_API_KEY", None)
 os.environ.setdefault("JWT_SECRET", "test-jwt-secret-" + "x" * 32)
 os.environ.setdefault("ENCRYPTION_MASTER_KEY", base64.b64encode(b"k" * 32).decode())
 
